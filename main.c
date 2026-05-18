@@ -1,4 +1,8 @@
 #include "include/main.h"
+#include "include/camera.h"
+#include "include/geometry_utils.h"
+#include "include/scene.h"
+#include "include/transform.h"
 #include "include/vector_utils.h"
 
 void Render(HWND hwnd)
@@ -11,18 +15,25 @@ void Render(HWND hwnd)
 
     uint32_t* pixels = (uint32_t*)fb->pixels;
 
-    int count = fb->width * fb->height;
+    Camera c = {
+      .transform = Transform_ZERO(),
+    };
 
-    for (int i = 0; i < count; i++){
-      int x = i % fb->width;
-      int y = i / fb->width;
-      int dist_to_center_sqr = dist_between_points_sqrt(x,y,250,250); 
-      if(dist_to_center_sqr <= 50*50){
-        pixels[i] = 0x00FF0000 ; // solid color
-      }else{
-        pixels[i] = 0x002020FF; // solid color
-      }
-    }
+    Triangle t;
+
+    t.vertices[2] = (Vertex){.position = Vec3D_XYZ(100.0f, 100.0f,0.0f)}; 
+    t.vertices[1] = (Vertex){.position = Vec3D_XYZ(200.0f, 100.0f,0.0f)}; 
+    t.vertices[0] = (Vertex){.position = Vec3D_XYZ(100.0f, 200.0f,0.0f)}; 
+
+    Scene s;
+
+    s.mesh_capacity = 8;
+    s.mesh_length = 0;
+    s.meshes = malloc(sizeof(Triangle) * s.mesh_capacity);
+
+    Scene_addTriangle(&s,t);
+
+    Camera_render(&c,&s,pixels,fb->width,fb->height);
 
 }
 
