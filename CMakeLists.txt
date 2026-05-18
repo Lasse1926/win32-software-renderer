@@ -1,10 +1,10 @@
 cmake_minimum_required(VERSION 3.23)
 
-project(c_window)
+project(win32-software-renderer)
 
-add_executable(c_window)
+add_executable(win32-software-renderer)
 
-target_sources(c_window
+target_sources(win32-software-renderer
   PRIVATE
     main.c
     src/camera.c
@@ -15,7 +15,7 @@ target_sources(c_window
     src/math_utils.c
 )
 
-target_include_directories(c_window
+target_include_directories(win32-software-renderer
   PRIVATE
     ${CMAKE_SOURCE_DIR}/include
     ${CMAKE_SOURCE_DIR}
