@@ -4,6 +4,8 @@
 #include "include/scene.h"
 #include "include/transform.h"
 #include "include/vector_utils.h"
+#include <stdio.h>
+#define FPS 100
 
 void Render(HWND hwnd)
 {
@@ -180,7 +182,10 @@ int WINAPI WinMain(
     ShowWindow(hwnd, nShowCmd);
 
     MSG msg;
-
+    LARGE_INTEGER freq;
+    LARGE_INTEGER lastTime;
+    QueryPerformanceFrequency(&freq);
+    QueryPerformanceCounter(&lastTime);
     while (1)
     {
         while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
@@ -192,10 +197,25 @@ int WINAPI WinMain(
             DispatchMessageA(&msg);
         }
 
-        Render(hwnd);
+        // --- dt start ---
+        LARGE_INTEGER currentTime;
+        QueryPerformanceCounter(&currentTime);
 
+        double dt = (double)(currentTime.QuadPart - lastTime.QuadPart) / freq.QuadPart;
+        lastTime = currentTime;
+        // --- dt end ---
+
+        Render(hwnd);
         InvalidateRect(hwnd, NULL, FALSE);
-        Sleep(1); // prevents 100% CPU usage
+
+        if (FPS > 0){
+          double target_dt = 1.0 / FPS;
+
+          if (dt < target_dt)
+          {
+              Sleep((DWORD)((target_dt - dt) * 1000.0));
+          }
+        }
     }
 
     return (int)msg.wParam;
