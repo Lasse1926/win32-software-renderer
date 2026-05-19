@@ -1,5 +1,7 @@
 #pragma once
 
+typedef struct { float x,y,z,w; } Vec4D;
+
 typedef struct Vec3D {
   float x;
   float y;

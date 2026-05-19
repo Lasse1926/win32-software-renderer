@@ -7,7 +7,7 @@
 #include <stdio.h>
 #define FPS 100
 
-void Render(HWND hwnd)
+void Render(HWND hwnd,Camera c)
 {
     struct Framebuffer* fb =
         (struct Framebuffer*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -16,10 +16,6 @@ void Render(HWND hwnd)
         return;
 
     uint32_t* pixels = (uint32_t*)fb->pixels;
-
-    Camera c = {
-      .transform = Transform_ZERO(),
-    };
 
     Triangle t;
 
@@ -205,7 +201,11 @@ int WINAPI WinMain(
         lastTime = currentTime;
         // --- dt end ---
 
-        Render(hwnd);
+        Camera c = {
+          .transform = Transform_ZERO(),
+        };
+
+        Render(hwnd,c);
         InvalidateRect(hwnd, NULL, FALSE);
 
         if (FPS > 0){

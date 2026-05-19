@@ -1,13 +1,54 @@
 #include "camera.h"
 #include "geometry_utils.h"
+#include "math_utils.h"
+#include "transform.h"
 #include "vector_utils.h"
-#include <stdio.h>
+#include <math.h>
+
+Camera Camera_new(float fovY,float aspect,float near,float far){
+  Camera c;
+  c.transform = Transform_ZERO();
+  c.fovY = fovY;
+  c.aspect = aspect;
+  c.near = near;
+  c.far = far;
+
+  c.focal_length = 1.0f/tan(fovY*0.5);
+
+  c.perspective_matrix[0][0] = c.focal_length/c.aspect;
+  c.perspective_matrix[1][1] = c.focal_length;
+  c.perspective_matrix[2][2] = (c.far+c.near)/(c.near-c.far);
+  c.perspective_matrix[3][2] = (2.0f*c.far*c.near)/(c.near-c.far);
+  c.perspective_matrix[2][3] = (2.0f*c.far*c.near)/(c.near-c.far);
+
+  return c;
+}
 
 void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
                    int height) {
+  // calc Camera Perspective matrix (implement rotation in transform)
+  // vec4 world = Model * vec4(localPos, 1);
+  // vec4 view  = View  * world;
+  // vec4 clip  = P     * view;
+  // 
+  // vec3 ndc;
+  // ndc.x = clip.x / clip.w;
+  // ndc.y = clip.y / clip.w;
+  // ndc.z = clip.z / clip.w;
+  //
+  // vec2 screen;
+  // screen.x = (ndc.x + 1.0f) * 0.5f * width;
+  // screen.y = (1.0f - ndc.y) * 0.5f * height;
+  // ndc.z is depth
+  //
   for (int i = 0; i < s->mesh_length; i++) {
     Triangle t = s->meshes[i];
+
+
+    // Transform to screen triangle -> AABB from screen triangle
+
     AABB aabb = AABB_from_Triangle(t);
+    
 
     for (int y = aabb.y_min; y <= aabb.y_max; y++) {
       for (int x = aabb.x_min; x <= aabb.x_max; x++) {
@@ -24,4 +65,11 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
       }
     }
   }
+}
+
+mat4 build_view_matrix(Vec3D camPos, mat4 camRot)
+{
+    mat4 R_inv = mat4_transpose(camRot);
+    mat4 T_inv = mat4_translate_inverse(camPos);
+    return mat4_multiply(R_inv, T_inv);
 }

@@ -30,15 +30,11 @@ Vec2D flaten_Vertex_Z(Vertex v){
   };
 }
 
-float line_determinant(Vertex edge_start, Vertex edge_end, Vec2D candidate){
+float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate){
 
-    //placeHolder
-    Vec2D edge_end_flat = flaten_Vertex_Z(edge_end); 
-    Vec2D edge_start_flat = flaten_Vertex_Z(edge_start); 
-    
-    Vec2D start_to_end = Vec2D_sub(edge_end_flat,edge_start_flat);
+    Vec2D start_to_end = Vec2D_sub(edge_end,edge_start);
 
-    Vec2D start_to_candidate = Vec2D_sub(candidate,edge_start_flat);
+    Vec2D start_to_candidate = Vec2D_sub(candidate,edge_start);
 
     return start_to_end.y * start_to_candidate.x - start_to_end.x * start_to_candidate.y;
 }
