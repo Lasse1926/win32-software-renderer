@@ -5,217 +5,199 @@
 #include "include/transform.h"
 #include "include/vector_utils.h"
 #define FPS 100
-
-void Render(HWND hwnd,Camera c)
+typedef struct AppState
 {
-    struct Framebuffer* fb =
-        (struct Framebuffer*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    struct Framebuffer fb;
+    Camera cam;
+} AppState;
 
-    if (!fb || !fb->pixels)
-        return;
+void Render(HWND hwnd) {
+  AppState *state = (AppState*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-    uint32_t* pixels = (uint32_t*)fb->pixels;
+  if (!state || !state->fb.pixels)
+    return;
 
-    Triangle t;
+  Camera *cam = &state->cam;
+  struct Framebuffer *fb = &state->fb;
+  uint32_t *pixels = (uint32_t *)fb->pixels;
 
-    t.vertices[2] = (Vertex){.position = Vec3D_XYZ(100.0f, 100.0f,0.0f)}; 
-    t.vertices[1] = (Vertex){.position = Vec3D_XYZ(200.0f, 100.0f,0.0f)}; 
-    t.vertices[0] = (Vertex){.position = Vec3D_XYZ(100.0f, 200.0f,0.0f)}; 
+  Triangle t;
+  t.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 20.0f)};
+  t.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 20.0f)};
+  t.vertices[2] = (Vertex){.position = Vec3D_XYZ(0.0f, 5.0f, 20.0f)};
 
-    Scene s;
+  Scene s = {0};
+  s.mesh_capacity = 8;
+  s.meshes = malloc(sizeof(Triangle) * s.mesh_capacity);
+  Scene_addTriangle(&s, t);
 
-    s.mesh_capacity = 8;
-    s.mesh_length = 0;
-    s.meshes = malloc(sizeof(Triangle) * s.mesh_capacity);
+  Camera_render(cam, &s, pixels, fb->width, fb->height);
 
-    Scene_addTriangle(&s,t);
-
-    Camera_render(&c,&s,pixels,fb->width,fb->height);
-
+  free(s.meshes);
 }
 
-LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam)
-{
-    switch (msg)
-    {
-        case WM_CREATE:
-        {
-            struct Framebuffer* fb =
-                (struct Framebuffer*)malloc(sizeof(struct Framebuffer));
+LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
+  AppState *state = (AppState*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+  switch (msg) {
+  case WM_KEYDOWN: {
+    Camera *cam = &state->cam;
+    switch (wParam) {
+    case 'W':
+      cam->transform.forward_vec = Vec3D_normalize(Vec3D_add(cam->transform.forward_vec,Vec3D_XYZ(0.0f,0.1f,0.0f)));
+      break;
 
-            if (!fb)
-                return -1;
+    case 'S':
+      cam->transform.forward_vec = Vec3D_normalize(Vec3D_add(cam->transform.forward_vec,Vec3D_XYZ(0.0f,-0.1f,0.0f)));
+      break;
+    }
+    return 0;
+  }
 
-            fb->width = 500;
-            fb->height = 500;
-            fb->pixels = NULL;
-            fb->memDC = NULL;
-            fb->bitmap = NULL;
+  case WM_KEYUP: {
+    // stop movement, etc.
+    return 0;
+  }
+  case WM_CREATE: {
+    AppState *state = (AppState *)malloc(sizeof(AppState));
+    if (!state)
+      return -1;
 
-            HDC hdc = GetDC(hwnd);
+    CREATESTRUCT *cs = (CREATESTRUCT*)lParam;
+    Camera *cam_param = (Camera*)cs->lpCreateParams;
+    state->cam = *cam_param;
 
-            fb->memDC = CreateCompatibleDC(hdc);
+    state->fb.width = 500;
+    state->fb.height = 500;
+    state->fb.pixels = NULL;
+    state->fb.memDC = NULL;
+    state->fb.bitmap = NULL;
 
-            BITMAPINFO bmi;
-            ZeroMemory(&bmi, sizeof(bmi));
+    HDC hdc = GetDC(hwnd);
 
-            bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
-            bmi.bmiHeader.biWidth = fb->width;
-            bmi.bmiHeader.biHeight = -fb->height; // top-down
-            bmi.bmiHeader.biPlanes = 1;
-            bmi.bmiHeader.biBitCount = 32;
-            bmi.bmiHeader.biCompression = BI_RGB;
+    state->fb.memDC = CreateCompatibleDC(hdc);
 
-            fb->bitmap = CreateDIBSection(
-                hdc,
-                &bmi,
-                DIB_RGB_COLORS,
-                &fb->pixels,
-                NULL,
-                0
-            );
+    BITMAPINFO bmi;
+    ZeroMemory(&bmi, sizeof(bmi));
 
-            SelectObject(fb->memDC, fb->bitmap);
+    bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
+    bmi.bmiHeader.biWidth = state->fb.width;
+    bmi.bmiHeader.biHeight = -state->fb.height;
+    bmi.bmiHeader.biPlanes = 1;
+    bmi.bmiHeader.biBitCount = 32;
+    bmi.bmiHeader.biCompression = BI_RGB;
 
-            ReleaseDC(hwnd, hdc);
+    state->fb.bitmap =
+        CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &state->fb.pixels, NULL, 0);
 
-            SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)fb);
+    SelectObject(state->fb.memDC, state->fb.bitmap);
 
-            return 0;
-        }
+    ReleaseDC(hwnd, hdc);
 
-        case WM_PAINT:
-        {
-            struct Framebuffer* fb =
-                (struct Framebuffer*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+    SetWindowLongPtr(hwnd, GWLP_USERDATA, (LONG_PTR)state);
 
-            PAINTSTRUCT ps;
-            HDC hdc = BeginPaint(hwnd, &ps);
+    return 0;
+  }
 
-            if (fb)
-            {
-                BitBlt(
-                    hdc,
-                    0, 0,
-                    fb->width,
-                    fb->height,
-                    fb->memDC,
-                    0, 0,
-                    SRCCOPY
-                );
-            }
+  case WM_PAINT: {
+    AppState *state =
+        (AppState *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
 
-            EndPaint(hwnd, &ps);
-            return 0;
-        }
+    PAINTSTRUCT ps;
+    HDC hdc = BeginPaint(hwnd, &ps);
 
-        case WM_DESTROY:
-        {
-            struct Framebuffer* fb =
-                (struct Framebuffer*)GetWindowLongPtr(hwnd, GWLP_USERDATA);
-
-            if (fb)
-            {
-                if (fb->bitmap)
-                    DeleteObject(fb->bitmap);
-
-                if (fb->memDC)
-                    DeleteDC(fb->memDC);
-
-                free(fb);
-            }
-
-            PostQuitMessage(0);
-            return 0;
-        }
+    if (state) {
+      BitBlt(hdc, 0, 0, state->fb.width, state->fb.height, state->fb.memDC, 0, 0, SRCCOPY);
     }
 
-    return DefWindowProcA(hwnd, msg, wParam, lParam);
+    EndPaint(hwnd, &ps);
+    return 0;
+  }
+
+  case WM_DESTROY: {
+    AppState *state =
+        (AppState *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
+
+    if (state) {
+      if (state->fb.bitmap)
+        DeleteObject(state->fb.bitmap);
+
+      if (state->fb.memDC)
+        DeleteDC(state->fb.memDC);
+
+      free(state);
+    }
+
+    PostQuitMessage(0);
+    return 0;
+  }
+  }
+
+  return DefWindowProcA(hwnd, msg, wParam, lParam);
 }
 
-int WINAPI WinMain(
-    HINSTANCE hInstance,
-    HINSTANCE hPrevInstance,
-    LPSTR lpCmdLine,
-    int nShowCmd)
-{
-    WNDCLASSA wc;
-    ZeroMemory(&wc, sizeof(wc));
+int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
+                   LPSTR lpCmdLine, int nShowCmd) {
 
-    wc.lpfnWndProc = WndProc;
-    wc.hInstance = hInstance;
-    wc.lpszClassName = "WindowTest_MainWindow";
-    wc.hCursor = LoadCursor(NULL, IDC_ARROW);
+  WNDCLASSA wc;
+  ZeroMemory(&wc, sizeof(wc));
 
-    RegisterClassA(&wc);
+  wc.lpfnWndProc = WndProc;
+  wc.hInstance = hInstance;
+  wc.lpszClassName = "WindowTest_MainWindow";
+  wc.hCursor = LoadCursor(NULL, IDC_ARROW);
 
-    RECT r = { 0, 0, 500, 500 };
+  RegisterClassA(&wc);
 
-    AdjustWindowRectEx(
-        &r,
-        WS_OVERLAPPEDWINDOW,
-        FALSE,
-        WS_EX_OVERLAPPEDWINDOW
-    );
-    int width  = r.right - r.left;
-    int height = r.bottom - r.top;
-    HWND hwnd = CreateWindowExA(
-        WS_EX_OVERLAPPEDWINDOW,
-        "WindowTest_MainWindow",
-        "Test Window",
-        WS_OVERLAPPEDWINDOW | WS_VISIBLE,
-        CW_USEDEFAULT,
-        CW_USEDEFAULT,
-        width,
-        height,
-        NULL,
-        NULL,
-        hInstance,
-        NULL
-    );
+  RECT r = {0, 0, 500, 500};
 
-    ShowWindow(hwnd, nShowCmd);
+  AdjustWindowRectEx(&r, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_OVERLAPPEDWINDOW);
+  int width = r.right - r.left;
+  int height = r.bottom - r.top;
 
-    MSG msg;
-    LARGE_INTEGER freq;
-    LARGE_INTEGER lastTime;
-    QueryPerformanceFrequency(&freq);
-    QueryPerformanceCounter(&lastTime);
-    while (1)
-    {
-        while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE))
-        {
-            if (msg.message == WM_QUIT)
-                return 0;
+  Camera c = Camera_new(width,height, 1.047198f, 1.0f, 0.1f, 1000.0f);
 
-            TranslateMessage(&msg);
-            DispatchMessageA(&msg);
-        }
+  HWND hwnd = CreateWindowExA(WS_EX_OVERLAPPEDWINDOW, "WindowTest_MainWindow",
+                              "Test Window", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
+                              CW_USEDEFAULT, CW_USEDEFAULT, width, height, NULL,
+                              NULL, hInstance, &c);
 
-        // --- dt start ---
-        LARGE_INTEGER currentTime;
-        QueryPerformanceCounter(&currentTime);
+  ShowWindow(hwnd, nShowCmd);
 
-        double dt = (double)(currentTime.QuadPart - lastTime.QuadPart) / freq.QuadPart;
-        lastTime = currentTime;
-        // --- dt end ---
 
-        Camera c = {
-          .transform = Transform_ZERO(),
-        };
+  MSG msg;
+  LARGE_INTEGER freq;
+  LARGE_INTEGER lastTime;
+  QueryPerformanceFrequency(&freq);
+  QueryPerformanceCounter(&lastTime);
+  while (1) {
+    while (PeekMessageA(&msg, NULL, 0, 0, PM_REMOVE)) {
+      if (msg.message == WM_QUIT)
+        return 0;
 
-        Render(hwnd,c);
-        InvalidateRect(hwnd, NULL, FALSE);
-
-        if (FPS > 0){
-          double target_dt = 1.0 / FPS;
-
-          if (dt < target_dt)
-          {
-              Sleep((DWORD)((target_dt - dt) * 1000.0));
-          }
-        }
+      TranslateMessage(&msg);
+      DispatchMessageA(&msg);
     }
 
-    return (int)msg.wParam;
+    // --- dt start ---
+    LARGE_INTEGER currentTime;
+    QueryPerformanceCounter(&currentTime);
+
+    double dt =
+        (double)(currentTime.QuadPart - lastTime.QuadPart) / freq.QuadPart;
+    lastTime = currentTime;
+    // --- dt end ---
+
+    Render(hwnd);
+    InvalidateRect(hwnd, NULL, FALSE);
+
+    if (FPS > 0) {
+      double target_dt = 1.0 / FPS;
+
+      if (dt < target_dt) {
+        Sleep((DWORD)((target_dt - dt) * 1000.0));
+      }
+    }
+  }
+
+  return (int)msg.wParam;
 }

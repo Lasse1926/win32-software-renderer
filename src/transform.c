@@ -1,25 +1,25 @@
 #include "transform.h"
+#include "vector_utils.h"
 
 Transform Transform_ZERO()
 {
     return (Transform){
         .position = Vec3D_ZERO(),
-        .forward_vec = Vec3D_ZERO(),
+        .forward_vec = Vec3D_XYZ(0.0f,0.0f,1.0f),
     };
 }
 
 mat4 rotation_from_forward(Vec3D forward)
 {
-    Vec3D worldUp = {0, 0, 1};
+    Vec3D worldUp = {0, 1, 0};
 
     forward = Vec3D_normalize(forward);
 
-    Vec3D right = Vec3D_normalize(Vec3_cross(Vec3D_XYZ(0.0f,0.0f,1.0f), forward));
+    Vec3D right = Vec3D_normalize(Vec3_cross(worldUp, forward));
     Vec3D up    = Vec3_cross(forward, right);
 
     mat4 m = {0};
 
-    // basis vectors (camera space)
     m.m[0][0] = right.x;
     m.m[0][1] = right.y;
     m.m[0][2] = right.z;

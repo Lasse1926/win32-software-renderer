@@ -1,5 +1,6 @@
 #include "geometry_utils.h"
 #include "camera.h"
+#include "vector_utils.h"
 
 AABB AABB_from_Triangle(Triangle a){
   AABB aabb;
@@ -62,11 +63,24 @@ float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate){
 }
 
 ScreenTriangle ScreenTriangle_from_Triangle(Camera* c,Triangle t){
+  ScreenTriangle st;
   for(int i = 0; i < 3;i++){
     // Vec4D world = Model * vec4(localPos, 1); If adding local and world space
     mat4 cam_view = build_view_matrix(c->transform.position,rotation_from_forward(c->transform.forward_vec));
     Vec4D view  = mul_mat4_vec4(cam_view,Vec4D_from_Vec3D(t.vertices[i].position,1.0f));
     Vec4D clip  = mul_mat4_vec4(c->perspective_matrix,view);
+
+    Vec3D ndc;
+    ndc.x = clip.x / clip.w;
+    ndc.y = clip.y / clip.w;
+    ndc.z = clip.z / clip.w;
+
+    Vec2D screen;
+    screen.x = (ndc.x + 1.0f) * 0.5f * c->screen_width;
+    screen.y = (1.0f - ndc.y) * 0.5f * c->screen_height;
+
+    st.vertices[i] = screen; 
   }
+  return st;
 }
 

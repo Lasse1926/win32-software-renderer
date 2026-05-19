@@ -1,5 +1,6 @@
 #include "vector_utils.h"
 #include "math_utils.h"
+#include <math.h>
 
 Vec3D Vec3D_XYZ(float x, float y, float z) {
   return (Vec3D){.x = x, .y = y, .z = z};
@@ -44,7 +45,7 @@ Vec3D Vec3D_scale(Vec3D a, float scalar) {
   };
 }
 
-float Vec3D_len(Vec3D a) { return Q_rsqrt(a.z * a.z + a.y * a.y + a.x * a.x); }
+float Vec3D_len(Vec3D a) { return sqrtf(a.z * a.z + a.y * a.y + a.x * a.x); }
 
 float Vec3D_len_sq(Vec3D a) { return a.z * a.z + a.y * a.y + a.x * a.x; }
 
@@ -52,9 +53,9 @@ Vec3D Vec3D_normalize(Vec3D a) {
   float len_sq = Vec3D_len_sq(a);
 
   if (len_sq == 0.0f)
-    return a; // or return zero vector explicitly
+    return a;
 
-  float inv_len = 1.0f / Q_rsqrt(len_sq);
+  float inv_len = Q_rsqrt(len_sq);
 
   return (Vec3D){
       .x = a.x * inv_len,
@@ -117,7 +118,7 @@ Vec2D Vec2D_scale(Vec2D a, float scalar) {
   };
 }
 
-float Vec2D_len(Vec2D a) { return Q_rsqrt(a.y * a.y + a.x * a.x); }
+float Vec2D_len(Vec2D a) { return sqrtf(a.y * a.y + a.x * a.x); }
 
 float Vec2D_len_sq(Vec2D a) { return a.y * a.y + a.x * a.x; }
 
@@ -125,9 +126,9 @@ Vec2D Vec2D_normalize(Vec2D a) {
   float len_sq = Vec2D_len_sq(a);
 
   if (len_sq == 0.0f)
-    return a; // or return zero vector explicitly
+    return a;
 
-  float inv_len = 1.0f / Q_rsqrt(len_sq);
+  float inv_len = Q_rsqrt(len_sq);
 
   return (Vec2D){
       .x = a.x * inv_len,
@@ -135,8 +136,8 @@ Vec2D Vec2D_normalize(Vec2D a) {
   };
 }
 
-Vec4D Vec4D_from_Vec3D(Vec3D v, float z) {
-  return (Vec4D){.w = v.x, .x = v.y, .y = v.z, .z = z};
+Vec4D Vec4D_from_Vec3D(Vec3D v, float w) {
+  return (Vec4D){.x = v.x, .y = v.y, .z = v.z, .w = w};
 }
 Vec4D Vec4D_multiply(Vec4D a, Vec4D b) {
   Vec4D result;

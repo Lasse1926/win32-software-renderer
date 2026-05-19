@@ -4,57 +4,54 @@
 #include "transform.h"
 #include <stdint.h>
 #include <math.h>
+#include <stdio.h>
+#include <string.h>
 
-Camera Camera_new(float fovY,float aspect,float near,float far){
-  Camera c;
+static int clamp_int(int v, int lo, int hi) {
+    if (v < lo) return lo;
+    if (v > hi) return hi;
+    return v;
+}
+
+Camera Camera_new(int screen_width,int screen_height,float fovY,float aspect,float z_near,float z_far){
+  Camera c = {0};
   c.transform = Transform_ZERO();
+  c.screen_width = screen_width;
+  c.screen_height = screen_height;
   c.fovY = fovY;
   c.aspect = aspect;
-  c.near = near;
-  c.far = far;
+  c.z_near = z_near;
+  c.z_far = z_far;
 
   c.focal_length = 1.0f/tan(fovY*0.5);
 
   c.perspective_matrix.m[0][0] = c.focal_length/c.aspect;
   c.perspective_matrix.m[1][1] = c.focal_length;
-  c.perspective_matrix.m[2][2] = (c.far+c.near)/(c.near-c.far);
-  c.perspective_matrix.m[3][2] = (2.0f*c.far*c.near)/(c.near-c.far);
-  c.perspective_matrix.m[2][3] = (2.0f*c.far*c.near)/(c.near-c.far);
+  c.perspective_matrix.m[2][2] = (c.z_far+c.z_near)/(c.z_near-c.z_far);
+  c.perspective_matrix.m[2][3] = (2.0f*c.z_far*c.z_near)/(c.z_near-c.z_far);
+  c.perspective_matrix.m[3][2] = -1.0f;
 
   return c;
 }
 
 void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
                    int height) {
-  // calc Camera Perspective matrix (implement rotation in transform)
-  // vec4 world = Model * vec4(localPos, 1);
-  // vec4 view  = View  * world;
-  // vec4 clip  = P     * view;
-  // 
-  // vec3 ndc;
-  // ndc.x = clip.x / clip.w;
-  // ndc.y = clip.y / clip.w;
-  // ndc.z = clip.z / clip.w;
-  //
-  // vec2 screen;
-  // screen.x = (ndc.x + 1.0f) * 0.5f * width;
-  // screen.y = (1.0f - ndc.y) * 0.5f * height;
-  // ndc.z is depth
   for (int i = 0; i < s->mesh_length; i++) {
     Triangle t = s->meshes[i];
-
-
-    // Transform to screen triangle -> AABB from screen triangle
 
     ScreenTriangle st = ScreenTriangle_from_Triangle(c, t);
 
     AABB aabb = AABB_from_ScreenTriangle(st);
     
 
-    for (int y = aabb.y_min; y <= aabb.y_max; y++) {
-      for (int x = aabb.x_min; x <= aabb.x_max; x++) {
+    int x0 = clamp_int((int)aabb.x_min, 0, width  - 1);
+    int x1 = clamp_int((int)aabb.x_max, 0, width  - 1);
+    int y0 = clamp_int((int)aabb.y_min, 0, height - 1);
+    int y1 = clamp_int((int)aabb.y_max, 0, height - 1);
+    memset(pixels, 0, width * height * sizeof(uint32_t));
+    for (int y = y0; y <= y1; y++) {
+      for (int x = x0; x <= x1; x++) {
         Vec2D p = Vec2D_XY(x, y);
-
         float w_0 = line_determinant(st.vertices[1], st.vertices[2], p);
         float w_1 = line_determinant(st.vertices[2], st.vertices[0], p);
         float w_2 = line_determinant(st.vertices[0], st.vertices[1], p);
