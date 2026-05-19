@@ -2,11 +2,19 @@
 
 typedef struct { float x,y,z,w; } Vec4D;
 
+typedef struct Vec2D {
+  float x;
+  float y;
+}Vec2D;
+
 typedef struct Vec3D {
   float x;
   float y;
   float z;
 }Vec3D;
+
+Vec4D Vec4D_from_Vec3D(Vec3D v,float z);
+Vec4D Vec4D_multiply(Vec4D a,Vec4D b);
 
 Vec3D Vec3D_XYZ(float x, float y,float z);
 Vec3D Vec3D_ZERO();
@@ -18,11 +26,7 @@ Vec3D Vec3D_scale(Vec3D a,float scalar);
 float Vec3D_len(Vec3D a);
 float Vec3D_len_sq(Vec3D a);
 Vec3D Vec3D_normalize(Vec3D a);
-
-typedef struct Vec2D {
-  float x;
-  float y;
-}Vec2D;
+Vec3D Vec3_cross(Vec3D a, Vec3D b);
 
 Vec2D Vec2D_XY(float x, float y);
 Vec2D Vec2D_ZERO();

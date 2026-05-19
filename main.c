@@ -4,7 +4,6 @@
 #include "include/scene.h"
 #include "include/transform.h"
 #include "include/vector_utils.h"
-#include <stdio.h>
 #define FPS 100
 
 void Render(HWND hwnd,Camera c)

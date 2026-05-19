@@ -1,5 +1,5 @@
 #include "scene.h"
-#include "geometry_utils.h"
+#include <stdlib.h>
 
 void Scene_addTriangle(Scene* s, Triangle t)
 {

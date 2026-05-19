@@ -1,8 +1,8 @@
 #include "camera.h"
-#include "geometry_utils.h"
 #include "math_utils.h"
+#include "scene.h"
 #include "transform.h"
-#include "vector_utils.h"
+#include <stdint.h>
 #include <math.h>
 
 Camera Camera_new(float fovY,float aspect,float near,float far){
@@ -15,11 +15,11 @@ Camera Camera_new(float fovY,float aspect,float near,float far){
 
   c.focal_length = 1.0f/tan(fovY*0.5);
 
-  c.perspective_matrix[0][0] = c.focal_length/c.aspect;
-  c.perspective_matrix[1][1] = c.focal_length;
-  c.perspective_matrix[2][2] = (c.far+c.near)/(c.near-c.far);
-  c.perspective_matrix[3][2] = (2.0f*c.far*c.near)/(c.near-c.far);
-  c.perspective_matrix[2][3] = (2.0f*c.far*c.near)/(c.near-c.far);
+  c.perspective_matrix.m[0][0] = c.focal_length/c.aspect;
+  c.perspective_matrix.m[1][1] = c.focal_length;
+  c.perspective_matrix.m[2][2] = (c.far+c.near)/(c.near-c.far);
+  c.perspective_matrix.m[3][2] = (2.0f*c.far*c.near)/(c.near-c.far);
+  c.perspective_matrix.m[2][3] = (2.0f*c.far*c.near)/(c.near-c.far);
 
   return c;
 }
@@ -40,23 +40,24 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
   // screen.x = (ndc.x + 1.0f) * 0.5f * width;
   // screen.y = (1.0f - ndc.y) * 0.5f * height;
   // ndc.z is depth
-  //
   for (int i = 0; i < s->mesh_length; i++) {
     Triangle t = s->meshes[i];
 
 
     // Transform to screen triangle -> AABB from screen triangle
 
-    AABB aabb = AABB_from_Triangle(t);
+    ScreenTriangle st = ScreenTriangle_from_Triangle(c, t);
+
+    AABB aabb = AABB_from_ScreenTriangle(st);
     
 
     for (int y = aabb.y_min; y <= aabb.y_max; y++) {
       for (int x = aabb.x_min; x <= aabb.x_max; x++) {
         Vec2D p = Vec2D_XY(x, y);
 
-        float w_0 = line_determinant(t.vertices[1], t.vertices[2], p);
-        float w_1 = line_determinant(t.vertices[2], t.vertices[0], p);
-        float w_2 = line_determinant(t.vertices[0], t.vertices[1], p);
+        float w_0 = line_determinant(st.vertices[1], st.vertices[2], p);
+        float w_1 = line_determinant(st.vertices[2], st.vertices[0], p);
+        float w_2 = line_determinant(st.vertices[0], st.vertices[1], p);
 
         if (w_0 >= 0 && w_1 >= 0 && w_2 >= 0) {
           int index = y * width + x;
