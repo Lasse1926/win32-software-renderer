@@ -22,14 +22,22 @@ void Render(HWND hwnd) {
   uint32_t *pixels = (uint32_t *)fb->pixels;
 
   Triangle t;
-  t.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 20.0f)};
-  t.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 20.0f)};
-  t.vertices[2] = (Vertex){.position = Vec3D_XYZ(0.0f, 5.0f, 20.0f)};
+  t.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, -20.0f)};
+  t.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, -20.0f)};
+  t.vertices[2] = (Vertex){.position = Vec3D_XYZ(0.0f, 5.0f, -20.0f)};
+
+  Triangle u;
+  u.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 20.0f)};
+  u.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 20.0f)};
+  u.vertices[2] = (Vertex){.position = Vec3D_XYZ(0.0f, 5.0f, 20.0f)};
 
   Scene s = {0};
+  s.transform = Transform_ZERO();
   s.mesh_capacity = 8;
   s.meshes = malloc(sizeof(Triangle) * s.mesh_capacity);
+
   Scene_addTriangle(&s, t);
+  Scene_addTriangle(&s, u);
 
   Camera_render(cam, &s, pixels, fb->width, fb->height);
 
@@ -43,11 +51,16 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     Camera *cam = &state->cam;
     switch (wParam) {
     case 'W':
-      cam->transform.forward_vec = Vec3D_normalize(Vec3D_add(cam->transform.forward_vec,Vec3D_XYZ(0.0f,0.1f,0.0f)));
+      rotate_Transform_x(&cam->transform,0.1);
       break;
-
     case 'S':
-      cam->transform.forward_vec = Vec3D_normalize(Vec3D_add(cam->transform.forward_vec,Vec3D_XYZ(0.0f,-0.1f,0.0f)));
+      rotate_Transform_x(&cam->transform,-0.1);
+      break;
+    case 'A':
+      rotate_Transform_y(&cam->transform,0.1);
+      break;
+    case 'D':
+      rotate_Transform_y(&cam->transform,-0.1);
       break;
     }
     return 0;

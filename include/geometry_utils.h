@@ -1,6 +1,7 @@
 #pragma once
 #include "vector_utils.h"
 
+typedef struct Scene Scene ;
 typedef struct Camera Camera;
 
 
@@ -27,5 +28,5 @@ typedef struct AABB{
 AABB AABB_from_Triangle(Triangle a);
 AABB AABB_from_ScreenTriangle(ScreenTriangle a);
 Vec2D flaten_Vertex_Z(Vertex v);
-ScreenTriangle ScreenTriangle_from_Triangle(Camera* c,Triangle t);
+ScreenTriangle ScreenTriangle_from_Triangle(Camera* c,Triangle t,Scene* s);
 float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate);

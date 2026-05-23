@@ -1,8 +1,11 @@
 #include "geometry_utils.h"
 #include "camera.h"
+#include "math_utils.h"
+#include "scene.h"
+#include "transform.h"
 #include "vector_utils.h"
 
-AABB AABB_from_Triangle(Triangle a){
+AABB AABB_from_Triangle(Triangle a) {
   AABB aabb;
   float xmin = MIN(a.vertices[0].position.x, a.vertices[1].position.x);
   float xmax = MAX(a.vertices[0].position.x, a.vertices[1].position.x);
@@ -24,7 +27,7 @@ AABB AABB_from_Triangle(Triangle a){
   return aabb;
 }
 
-AABB AABB_from_ScreenTriangle(ScreenTriangle a){
+AABB AABB_from_ScreenTriangle(ScreenTriangle a) {
   AABB aabb;
   float xmin = MIN(a.vertices[0].x, a.vertices[1].x);
   float xmax = MAX(a.vertices[0].x, a.vertices[1].x);
@@ -46,29 +49,34 @@ AABB AABB_from_ScreenTriangle(ScreenTriangle a){
   return aabb;
 }
 
-Vec2D flaten_Vertex_Z(Vertex v){
+Vec2D flaten_Vertex_Z(Vertex v) {
   return (Vec2D){
-    .x = v.position.x,
-    .y = v.position.y,
+      .x = v.position.x,
+      .y = v.position.y,
   };
 }
 
-float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate){
+float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate) {
 
-    Vec2D start_to_end = Vec2D_sub(edge_end,edge_start);
+  Vec2D start_to_end = Vec2D_sub(edge_end, edge_start);
 
-    Vec2D start_to_candidate = Vec2D_sub(candidate,edge_start);
+  Vec2D start_to_candidate = Vec2D_sub(candidate, edge_start);
 
-    return start_to_end.y * start_to_candidate.x - start_to_end.x * start_to_candidate.y;
+  return start_to_end.y * start_to_candidate.x -
+         start_to_end.x * start_to_candidate.y;
 }
 
-ScreenTriangle ScreenTriangle_from_Triangle(Camera* c,Triangle t){
+ScreenTriangle ScreenTriangle_from_Triangle(Camera *c, Triangle t, Scene *s) {
   ScreenTriangle st;
-  for(int i = 0; i < 3;i++){
-    // Vec4D world = Model * vec4(localPos, 1); If adding local and world space
-    mat4 cam_view = build_view_matrix(c->transform.position,rotation_from_forward(c->transform.forward_vec));
-    Vec4D view  = mul_mat4_vec4(cam_view,Vec4D_from_Vec3D(t.vertices[i].position,1.0f));
-    Vec4D clip  = mul_mat4_vec4(c->perspective_matrix,view);
+  mat4 Model = Transform_to_Model_mat4(s->transform);
+  mat4 View = build_view_matrix(c);
+  mat4 Proj = camera_projection_matrix(c);
+
+  mat4 MVP = mat4_multiply(Proj, mat4_multiply(View, Model));
+
+  for (int i = 0; i < 3; i++) {
+
+    Vec4D clip = mul_mat4_vec4(MVP,Vec4D_from_Vec3D(t.vertices[i].position, 1));
 
     Vec3D ndc;
     ndc.x = clip.x / clip.w;
@@ -79,8 +87,7 @@ ScreenTriangle ScreenTriangle_from_Triangle(Camera* c,Triangle t){
     screen.x = (ndc.x + 1.0f) * 0.5f * c->screen_width;
     screen.y = (1.0f - ndc.y) * 0.5f * c->screen_height;
 
-    st.vertices[i] = screen; 
+    st.vertices[i] = screen;
   }
   return st;
 }
-

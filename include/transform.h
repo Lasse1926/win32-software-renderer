@@ -4,8 +4,14 @@
 
 typedef struct Transform {
   Vec3D position;
-  Vec3D forward_vec;
+  mat3 rotation;
 }Transform;
 
 Transform Transform_ZERO();
 mat4 rotation_from_forward(Vec3D forward);
+mat4 position_to_translationMat(Vec3D position);
+mat4 Transform_to_Model_mat4(Transform t);
+
+void rotate_Transform_x(Transform* t, float r);
+void rotate_Transform_y(Transform* t, float r);
+void rotate_Transform_z(Transform* t, float r);

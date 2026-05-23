@@ -1,7 +1,9 @@
 #pragma once
 #include "geometry_utils.h"
+#include "transform.h"
 
 typedef struct Scene {
+    Transform transform;
     Triangle* meshes;
     int mesh_length;
     int mesh_capacity;

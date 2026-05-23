@@ -36,10 +36,11 @@ Camera Camera_new(int screen_width,int screen_height,float fovY,float aspect,flo
 
 void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
                    int height) {
+  memset(pixels, 0, width * height * sizeof(uint32_t));
   for (int i = 0; i < s->mesh_length; i++) {
     Triangle t = s->meshes[i];
 
-    ScreenTriangle st = ScreenTriangle_from_Triangle(c, t);
+    ScreenTriangle st = ScreenTriangle_from_Triangle(c, t,s);
 
     AABB aabb = AABB_from_ScreenTriangle(st);
     
@@ -48,7 +49,6 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
     int x1 = clamp_int((int)aabb.x_max, 0, width  - 1);
     int y0 = clamp_int((int)aabb.y_min, 0, height - 1);
     int y1 = clamp_int((int)aabb.y_max, 0, height - 1);
-    memset(pixels, 0, width * height * sizeof(uint32_t));
     for (int y = y0; y <= y1; y++) {
       for (int x = x0; x <= x1; x++) {
         Vec2D p = Vec2D_XY(x, y);
@@ -65,9 +65,28 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
   }
 }
 
-mat4 build_view_matrix(Vec3D camPos, mat4 camRot)
+mat4 build_view_matrix(Camera *c)
 {
+    mat4 camRot = mat4_from_mat3(c->transform.rotation);
     mat4 R_inv = mat4_transpose(camRot);
-    mat4 T_inv = mat4_translate_inverse(camPos);
+    mat4 T_inv = mat4_translate_inverse(c->transform.position);
     return mat4_multiply(R_inv, T_inv);
+}
+
+mat4 camera_projection_matrix(Camera* c)
+{
+    float f = 1.0f / tanf(c->fovY * 0.5f);
+
+    mat4 P = mat4_identity();
+
+    P.m[0][0] = f / c->aspect;
+    P.m[1][1] = f;
+
+    P.m[2][2] = (c->z_far + c->z_near) / (c->z_near - c->z_far);
+    P.m[2][3] = (2.0f * c->z_far * c->z_near) / (c->z_near - c->z_far);
+
+    P.m[3][2] = -1.0f;
+    P.m[3][3] = 0.0f;
+
+    return P;
 }
