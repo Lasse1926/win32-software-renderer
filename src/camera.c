@@ -1,4 +1,5 @@
 #include "camera.h"
+#include "geometry_utils.h"
 #include "math_utils.h"
 #include "scene.h"
 #include "transform.h"
@@ -40,8 +41,21 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
   for (int i = 0; i < s->mesh_length; i++) {
     Triangle t = s->meshes[i];
 
-    ScreenTriangle st = ScreenTriangle_from_Triangle(c, t,s);
+    ClipTriangle ct = get_clip_from_trinagle(c,t,s);
 
+    int behind = 0;
+
+    for (int i = 0; i < 3; i++) {
+        if (ct.vertices[i].w <= 0.0f)
+            behind++;
+    }
+
+    if (behind >= 1) {
+        continue;
+    }
+
+    ScreenTriangle st = ScreenTriangle_from_clipTriangle(c, ct,s);
+    
     AABB aabb = AABB_from_ScreenTriangle(st);
     
 
@@ -49,6 +63,7 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
     int x1 = clamp_int((int)aabb.x_max, 0, width  - 1);
     int y0 = clamp_int((int)aabb.y_min, 0, height - 1);
     int y1 = clamp_int((int)aabb.y_max, 0, height - 1);
+
     for (int y = y0; y <= y1; y++) {
       for (int x = x0; x <= x1; x++) {
         Vec2D p = Vec2D_XY(x, y);

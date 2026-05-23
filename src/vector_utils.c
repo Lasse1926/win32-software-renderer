@@ -32,9 +32,9 @@ Vec3D Vec3D_add(Vec3D a, Vec3D b) {
 };
 Vec3D Vec3D_sub(Vec3D a, Vec3D b) {
   return (Vec3D){
-      .x = b.x - a.x,
-      .y = b.y - a.y,
-      .z = b.z - a.z,
+      .x = a.x - b.x,
+      .y = a.y - b.y,
+      .z = a.z - b.z,
   };
 }
 Vec3D Vec3D_scale(Vec3D a, float scalar) {
@@ -107,8 +107,8 @@ Vec2D Vec2D_add(Vec2D a, Vec2D b) {
 };
 Vec2D Vec2D_sub(Vec2D a, Vec2D b) {
   return (Vec2D){
-      .x = b.x - a.x,
-      .y = b.y - a.y,
+      .x = a.x - b.x,
+      .y = a.y - b.y,
   };
 }
 Vec2D Vec2D_scale(Vec2D a, float scalar) {

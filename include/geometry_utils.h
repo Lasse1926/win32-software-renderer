@@ -13,6 +13,10 @@ typedef struct Triangle{
   Vertex vertices[3];
 } Triangle;
 
+typedef struct ClipTriangle{
+    Vec4D vertices[3];
+} ClipTriangle;
+
 typedef struct ScreenTriangle{
   Vec2D vertices[3];
 } ScreenTriangle;
@@ -28,5 +32,9 @@ typedef struct AABB{
 AABB AABB_from_Triangle(Triangle a);
 AABB AABB_from_ScreenTriangle(ScreenTriangle a);
 Vec2D flaten_Vertex_Z(Vertex v);
-ScreenTriangle ScreenTriangle_from_Triangle(Camera* c,Triangle t,Scene* s);
+
+ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Scene *s);
+ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip, Scene *s);
+
+ScreenTriangle ScreenTriangle_Empty();
 float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate);

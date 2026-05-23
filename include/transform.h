@@ -5,6 +5,7 @@
 typedef struct Transform {
   Vec3D position;
   mat3 rotation;
+  Vec3D euler_angles;
 }Transform;
 
 Transform Transform_ZERO();

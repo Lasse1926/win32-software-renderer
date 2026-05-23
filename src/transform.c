@@ -6,6 +6,7 @@ Transform Transform_ZERO() {
   return (Transform){
       .position = Vec3D_ZERO(),
       .rotation = mat3_identity(),
+      .euler_angles = Vec3D_ZERO(),
   };
 }
 
@@ -52,14 +53,27 @@ mat4 position_to_translationMat(Vec3D position) {
   return M;
 }
 
+void update_rotation(Transform *t)
+{
+    mat3 Rx = rotate_mat3_x(mat3_identity(), t->euler_angles.x);
+    mat3 Ry = rotate_mat3_y(mat3_identity(), t->euler_angles.y);
+    mat3 Rz = rotate_mat3_z(mat3_identity(), t->euler_angles.z);
+
+    // order matters (this is standard yaw-pitch-roll)
+    t->rotation = mat3_multiply(Ry, mat3_multiply(Rx, Rz));
+}
+
 void rotate_Transform_x(Transform *t, float r) {
-  t->rotation = rotate_mat3_x(t->rotation, r);
+  t->euler_angles.x += r;
+  update_rotation(t);
 }
 void rotate_Transform_y(Transform *t, float r) {
-  t->rotation = rotate_mat3_y(t->rotation, r);
+  t->euler_angles.y += r;
+  update_rotation(t);
 }
 void rotate_Transform_z(Transform *t, float r) {
-  t->rotation = rotate_mat3_z(t->rotation, r);
+  t->euler_angles.z += r;
+  update_rotation(t);
 }
 
 mat4 Transform_to_Model_mat4(Transform t) {

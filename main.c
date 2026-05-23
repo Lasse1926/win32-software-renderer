@@ -27,9 +27,9 @@ void Render(HWND hwnd) {
   t.vertices[2] = (Vertex){.position = Vec3D_XYZ(0.0f, 5.0f, -20.0f)};
 
   Triangle u;
-  u.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 20.0f)};
-  u.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 20.0f)};
-  u.vertices[2] = (Vertex){.position = Vec3D_XYZ(0.0f, 5.0f, 20.0f)};
+  u.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, 20.0f)};
+  u.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, 20.0f)};
+  u.vertices[2] = (Vertex){.position = Vec3D_XYZ(0.0f, -5.0f, 20.0f)};
 
   Scene s = {0};
   s.transform = Transform_ZERO();

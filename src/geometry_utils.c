@@ -56,6 +56,13 @@ Vec2D flaten_Vertex_Z(Vertex v) {
   };
 }
 
+ScreenTriangle ScreenTriangle_Empty() {
+  ScreenTriangle st = {
+      .vertices = {Vec2D_ZERO(), Vec2D_ZERO(), Vec2D_ZERO()},
+  };
+  return st;
+}
+
 float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate) {
 
   Vec2D start_to_end = Vec2D_sub(edge_end, edge_start);
@@ -66,22 +73,29 @@ float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate) {
          start_to_end.x * start_to_candidate.y;
 }
 
-ScreenTriangle ScreenTriangle_from_Triangle(Camera *c, Triangle t, Scene *s) {
-  ScreenTriangle st;
+ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Scene *s){
   mat4 Model = Transform_to_Model_mat4(s->transform);
   mat4 View = build_view_matrix(c);
-  mat4 Proj = camera_projection_matrix(c);
+  mat4 Proj = c->perspective_matrix;
 
   mat4 MVP = mat4_multiply(Proj, mat4_multiply(View, Model));
 
+  ClipTriangle clip;
+
   for (int i = 0; i < 3; i++) {
+    clip.vertices[i] = mul_mat4_vec4(MVP, Vec4D_from_Vec3D(t.vertices[i].position, 1));
+  }
+  return clip;
+}
 
-    Vec4D clip = mul_mat4_vec4(MVP,Vec4D_from_Vec3D(t.vertices[i].position, 1));
+ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip, Scene *s){
+  ScreenTriangle st;
 
+  for (int i = 0; i < 3; i++) {
     Vec3D ndc;
-    ndc.x = clip.x / clip.w;
-    ndc.y = clip.y / clip.w;
-    ndc.z = clip.z / clip.w;
+    ndc.x = clip.vertices[i].x / clip.vertices[i].w;
+    ndc.y = clip.vertices[i].y / clip.vertices[i].w;
+    ndc.z = clip.vertices[i].z / clip.vertices[i].w;
 
     Vec2D screen;
     screen.x = (ndc.x + 1.0f) * 0.5f * c->screen_width;
@@ -89,5 +103,6 @@ ScreenTriangle ScreenTriangle_from_Triangle(Camera *c, Triangle t, Scene *s) {
 
     st.vertices[i] = screen;
   }
+
   return st;
 }
