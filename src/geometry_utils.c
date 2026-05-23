@@ -85,6 +85,7 @@ ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Scene *s){
   for (int i = 0; i < 3; i++) {
     clip.vertices[i] = mul_mat4_vec4(MVP, Vec4D_from_Vec3D(t.vertices[i].position, 1));
   }
+  clip.color = t.color;
   return clip;
 }
 
@@ -103,6 +104,7 @@ ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip, Sc
 
     st.vertices[i] = screen;
   }
+  st.color = clip.color;
 
   return st;
 }

@@ -73,7 +73,7 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
 
         if (w_0 >= 0 && w_1 >= 0 && w_2 >= 0) {
           int index = y * width + x;
-          pixels[index] = 0x002020FF;
+          pixels[index] = st.color;
         }
       }
     }
