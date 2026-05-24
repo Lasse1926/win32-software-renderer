@@ -20,7 +20,7 @@ typedef struct ClipTriangle {
 } ClipTriangle;
 
 typedef struct ScreenTriangle {
-  Vec2D vertices[3];
+  Vec3D vertices[3];
   uint32_t color;
 } ScreenTriangle;
 
@@ -41,4 +41,7 @@ ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip,
                                                 Scene *s);
 
 ScreenTriangle ScreenTriangle_Empty();
+ScreenTriangle ScreenTriangle_Vec3(Vec3D a,Vec3D b,Vec3D c);
 float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate);
+float singed_triangle_area(ScreenTriangle t);
+Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t);

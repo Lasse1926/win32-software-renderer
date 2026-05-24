@@ -17,6 +17,6 @@ typedef struct Camera {
 }Camera;
 
 Camera Camera_new(int screen_width,int screen_height,float fovY,float aspect,float near,float far);
-void Camera_render(Camera* c,Scene* s, uint32_t* pixels, int width, int height);
+void Camera_render(Camera* c,Scene* s, uint32_t* pixels, int width, int height,float *db);
 mat4 build_view_matrix(Camera* c);
 mat4 camera_projection_matrix(Camera* c);

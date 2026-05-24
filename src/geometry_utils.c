@@ -58,7 +58,15 @@ Vec2D flaten_Vertex_Z(Vertex v) {
 
 ScreenTriangle ScreenTriangle_Empty() {
   ScreenTriangle st = {
-      .vertices = {Vec2D_ZERO(), Vec2D_ZERO(), Vec2D_ZERO()},
+      .vertices = {Vec3D_ZERO(), Vec3D_ZERO(), Vec3D_ZERO()},
+  };
+  return st;
+}
+
+ScreenTriangle ScreenTriangle_Vec3(Vec3D a,Vec3D b,Vec3D c){
+  ScreenTriangle st = {
+    .vertices = {a,b,c},
+    .color = 0x00FFFFFF,
   };
   return st;
 }
@@ -71,6 +79,15 @@ float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate) {
 
   return start_to_end.y * start_to_candidate.x -
          start_to_end.x * start_to_candidate.y;
+}
+
+float singed_triangle_area(ScreenTriangle t){
+  Vec2D a = Vec2D_from_Vec3D_XY(t.vertices[0]);
+  Vec2D b = Vec2D_from_Vec3D_XY(t.vertices[1]);
+  Vec2D c = Vec2D_from_Vec3D_XY(t.vertices[2]);
+  Vec2D a_c = Vec2D_sub(c,a);
+  Vec2D abPerp = Vec2D_perpendicular(Vec2D_sub(b,a));
+  return Vec2D_dot(a_c,abPerp)/2.0f;
 }
 
 ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Scene *s){
@@ -98,13 +115,31 @@ ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip, Sc
     ndc.y = clip.vertices[i].y / clip.vertices[i].w;
     ndc.z = clip.vertices[i].z / clip.vertices[i].w;
 
-    Vec2D screen;
+    Vec3D screen;
     screen.x = (ndc.x + 1.0f) * 0.5f * c->screen_width;
     screen.y = (1.0f - ndc.y) * 0.5f * c->screen_height;
+    screen.z = ndc.z;
 
     st.vertices[i] = screen;
   }
   st.color = clip.color;
 
   return st;
+}
+
+Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t){
+  Vec3D a = t.vertices[0];
+  Vec3D b = t.vertices[0];
+  Vec3D c = t.vertices[0];
+  Vec3D point = Vec3D_XYZ(p.x,p.y,1.0f);
+
+  float areaABP = singed_triangle_area(ScreenTriangle_Vec3(a,b,point));
+  float areaBCP = singed_triangle_area(ScreenTriangle_Vec3(b,c,point));
+  float areaCAP = singed_triangle_area(ScreenTriangle_Vec3(c,a,point));
+
+  float invAreaSum = 1.0f/(areaABP+areaBCP+areaCAP);
+
+  Vec3D weights = Vec3D_XYZ(areaBCP*invAreaSum,areaCAP*invAreaSum,areaABP*invAreaSum);
+  return weights;
+
 }

@@ -63,19 +63,31 @@ Vec3D Vec3D_normalize(Vec3D a) {
       .z = a.z * inv_len,
   };
 }
-Vec3D Vec3_cross(Vec3D a, Vec3D b)
-{
-    Vec3D r;
+Vec3D Vec3_cross(Vec3D a, Vec3D b) {
+  Vec3D r;
 
-    r.x = a.y * b.z - a.z * b.y;
-    r.y = a.z * b.x - a.x * b.z;
-    r.z = a.x * b.y - a.y * b.x;
+  r.x = a.y * b.z - a.z * b.y;
+  r.y = a.z * b.x - a.x * b.z;
+  r.z = a.x * b.y - a.y * b.x;
 
-    return r;
+  return r;
+}
+
+float Vec3D_dot(Vec3D a, Vec3D b){
+    return a.x * b.x +
+           a.y * b.y +
+           a.z * b.z;
 }
 
 // Vec2D ----------------------
 
+
+Vec2D Vec2D_from_Vec3D_XY(Vec3D v){
+  return (Vec2D){
+    .x = v.x,
+    .y = v.y,
+  };
+}
 Vec2D Vec2D_XY(float x, float y) {
   return (Vec2D){
       .x = x,
@@ -146,4 +158,15 @@ Vec4D Vec4D_multiply(Vec4D a, Vec4D b) {
   result.z = a.z * b.z;
   result.w = a.w * b.w;
   return result;
+}
+
+Vec2D Vec2D_perpendicular(Vec2D a){
+    Vec2D result;
+    result.x = -a.y;
+    result.y =  a.x;
+    return result;
+}
+
+float Vec2D_dot(Vec2D a, Vec2D b){
+  return a.x * b.x + a.y * b.y;
 }

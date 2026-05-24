@@ -7,6 +7,7 @@
 #define FPS 100
 typedef struct AppState {
   struct Framebuffer fb;
+  float *depth_buffer;
   Camera cam;
   Scene s;
 } AppState;
@@ -20,8 +21,9 @@ void Render(HWND hwnd) {
   Camera *cam = &state->cam;
   struct Framebuffer *fb = &state->fb;
   uint32_t *pixels = (uint32_t *)fb->pixels;
+  float *db = state->depth_buffer;
 
-  Camera_render(cam, &state->s, pixels, fb->width, fb->height);
+  Camera_render(cam, &state->s, pixels, fb->width, fb->height,db);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -188,6 +190,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
 
     state->fb.bitmap =
         CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &state->fb.pixels, NULL, 0);
+
+    state->depth_buffer = malloc(state->fb.width * state->fb.height * sizeof(float));
 
     SelectObject(state->fb.memDC, state->fb.bitmap);
 

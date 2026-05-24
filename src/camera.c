@@ -3,6 +3,8 @@
 #include "math_utils.h"
 #include "scene.h"
 #include "transform.h"
+#include "vector_utils.h"
+#include <float.h>
 #include <stdint.h>
 #include <math.h>
 #include <stdio.h>
@@ -35,9 +37,11 @@ Camera Camera_new(int screen_width,int screen_height,float fovY,float aspect,flo
   return c;
 }
 
+
 void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
-                   int height) {
+                   int height, float *db) {
   memset(pixels, 0, width * height * sizeof(uint32_t));
+  memset(db,FLT_MAX, width * height * sizeof(float));
   for (int i = 0; i < s->mesh_length; i++) {
     Triangle t = s->meshes[i];
 
@@ -66,19 +70,31 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width,
 
     for (int y = y0; y <= y1; y++) {
       for (int x = x0; x <= x1; x++) {
+        int index = y * width + x;
         Vec2D p = Vec2D_XY(x, y);
-        float w_0 = line_determinant(st.vertices[1], st.vertices[2], p);
-        float w_1 = line_determinant(st.vertices[2], st.vertices[0], p);
-        float w_2 = line_determinant(st.vertices[0], st.vertices[1], p);
+        Vec3D depths = Vec3D_XYZ(st.vertices[0].z,st.vertices[1].z,st.vertices[2].z);
+        Vec3D weights = get_screenTriangle_weights(p,st);
+        
+        float depth = Vec3D_dot(depths,weights);
+
+        if (depth > db[index]){
+          continue;
+        }
+
+        db[index] = depth;
+        
+        float w_0 = line_determinant(Vec2D_from_Vec3D_XY(st.vertices[1]),Vec2D_from_Vec3D_XY(st.vertices[2]), p);
+        float w_1 = line_determinant(Vec2D_from_Vec3D_XY(st.vertices[2]),Vec2D_from_Vec3D_XY(st.vertices[0]), p);
+        float w_2 = line_determinant(Vec2D_from_Vec3D_XY(st.vertices[0]),Vec2D_from_Vec3D_XY(st.vertices[1]), p);
 
         if (w_0 >= 0 && w_1 >= 0 && w_2 >= 0) {
-          int index = y * width + x;
           pixels[index] = st.color;
         }
       }
     }
   }
 }
+
 
 mat4 build_view_matrix(Camera *c)
 {
