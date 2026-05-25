@@ -2,13 +2,24 @@
 #include "geometry_utils.h"
 #include "transform.h"
 
-typedef struct Scene {
+typedef struct Model {
     Transform transform;
     Triangle* meshes;
     int mesh_length;
     int mesh_capacity;
-} Scene;
+} Model;
 
-void Scene_addTriangle(Scene* s, Triangle t);
-void Scene_popTriangle(Scene* s);
-void Scene_removeTriangle(Scene* s, int i);
+typedef struct Scene{
+    Model* models;
+    int model_length;
+    int model_capacity;
+} Scene ;
+
+
+void Model_addTriangle(Model* m, Triangle t);
+void Model_popTriangle(Model* m);
+void Model_removeTriangle(Model* m, int i);
+
+void Scene_addModel(Scene* s, Model m);
+void Scene_popModel(Scene* s);
+void Scene_removeModel(Scene* s, int i);

@@ -2,7 +2,7 @@
 #include "vector_utils.h"
 #include <stdint.h>
 
-typedef struct Scene Scene;
+typedef struct Model Model;
 typedef struct Camera Camera;
 
 typedef struct Vertex {
@@ -36,12 +36,11 @@ AABB AABB_from_Triangle(Triangle a);
 AABB AABB_from_ScreenTriangle(ScreenTriangle a);
 Vec2D flaten_Vertex_Z(Vertex v);
 
-ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Scene *s);
-ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip,
-                                                Scene *s);
+ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Model *m);
+ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip);
 
 ScreenTriangle ScreenTriangle_Empty();
 ScreenTriangle ScreenTriangle_Vec3(Vec3D a,Vec3D b,Vec3D c);
 float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate);
-float singed_triangle_area(ScreenTriangle t);
+float signed_triangle_area(ScreenTriangle t);
 Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t);

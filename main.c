@@ -4,6 +4,7 @@
 #include "include/scene.h"
 #include "include/transform.h"
 #include "include/vector_utils.h"
+#include <stdio.h>
 #define FPS 100
 typedef struct AppState {
   struct Framebuffer fb;
@@ -32,18 +33,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   case WM_KEYDOWN: {
     Camera *cam = &state->cam;
     Scene *s = &state->s;
+    Model *mTarget = &s->models[1];
     switch (wParam) {
     case 'W':
-      rotate_Transform_x(&s->transform, 0.1);
+      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(0.0f,0.0f,1.0f));
       break;
     case 'S':
-      rotate_Transform_x(&s->transform, -0.1);
+      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(0.0f,0.0f,-1.0f));
       break;
     case 'A':
-      rotate_Transform_y(&s->transform, 0.1);
+      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(1.0f,0.0f,0.0f));
       break;
     case 'D':
-      rotate_Transform_y(&s->transform, -0.1);
+      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(-1.0f,0.0f,0.0f));
       break;
     }
     return 0;
@@ -154,23 +156,48 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     t11.color = magenta;
 
     Scene s = {0};
-    s.transform = Transform_ZERO();
-    s.transform.position.z = -20.0f;
-    s.mesh_capacity = 8;
-    s.meshes = malloc(sizeof(Triangle) * s.mesh_capacity);
+    Model m = {0};
+    Model m2 = {0};
 
-    Scene_addTriangle(&s, t0);
-    Scene_addTriangle(&s, t1);
-    Scene_addTriangle(&s, t2);
-    Scene_addTriangle(&s, t3);
-    Scene_addTriangle(&s, t4);
-    Scene_addTriangle(&s, t5);
-    Scene_addTriangle(&s, t6);
-    Scene_addTriangle(&s, t7);
-    Scene_addTriangle(&s, t8);
-    Scene_addTriangle(&s, t9);
-    Scene_addTriangle(&s, t10);
-    Scene_addTriangle(&s, t11);
+    m.transform = Transform_ZERO();
+    m.transform.position.z = -30.0f;
+    rotate_Transform_y(&m.transform, 1.570796);
+    m.mesh_capacity = 8;
+    m.meshes = malloc(sizeof(Triangle) * m.mesh_capacity);
+
+    m2.transform = Transform_ZERO();
+    m2.transform.position.z = -20.0f;
+    m2.mesh_capacity = 8;
+    m2.meshes = malloc(sizeof(Triangle) * m2.mesh_capacity);
+
+    Model_addTriangle(&m, t0);
+    Model_addTriangle(&m, t1);
+    Model_addTriangle(&m, t2);
+    Model_addTriangle(&m, t3);
+    Model_addTriangle(&m, t4);
+    Model_addTriangle(&m, t5);
+    Model_addTriangle(&m, t6);
+    Model_addTriangle(&m, t7);
+    Model_addTriangle(&m, t8);
+    Model_addTriangle(&m, t9);
+    Model_addTriangle(&m, t10);
+    Model_addTriangle(&m, t11);
+
+    Model_addTriangle(&m2, t0);
+    Model_addTriangle(&m2, t1);
+    Model_addTriangle(&m2, t2);
+    Model_addTriangle(&m2, t3);
+    Model_addTriangle(&m2, t4);
+    Model_addTriangle(&m2, t5);
+    Model_addTriangle(&m2, t6);
+    Model_addTriangle(&m2, t7);
+    Model_addTriangle(&m2, t8);
+    Model_addTriangle(&m2, t9);
+    Model_addTriangle(&m2, t10);
+    Model_addTriangle(&m2, t11);
+
+    Scene_addModel(&s,m);
+    Scene_addModel(&s,m2);
 
     state->s = s;
 
@@ -231,8 +258,19 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         state->fb.memDC = NULL;
       }
 
-      free(state->s.meshes);
-      state->s.meshes = NULL;
+      for(int i = 0; i<state->s.model_length;i++){
+        free(state->s.models[i].meshes);
+        state->s.models[i].meshes = NULL;
+        state->s.models[i].mesh_capacity = 0;
+        state->s.models[i].mesh_length = 0;
+      }
+
+
+      free(state->s.models);
+      state->s.models = NULL;
+
+      state->s.model_length = 0;
+      state->s.model_capacity = 0;
 
       free(state);
       SetWindowLongPtr(hwnd, GWLP_USERDATA, 0);

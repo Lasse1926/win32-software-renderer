@@ -1,25 +1,57 @@
 #include "scene.h"
 #include <stdlib.h>
 
-void Scene_addTriangle(Scene* s, Triangle t)
+void Model_addTriangle(Model* m, Triangle t)
 {
-    if (s->mesh_length >= s->mesh_capacity)
+    if (m->mesh_length >= m->mesh_capacity)
     {
-        s->mesh_capacity *= 2;
-        s->meshes = realloc(s->meshes, sizeof(Triangle) * s->mesh_capacity);
+        m->mesh_capacity *= 2;
+        m->meshes = realloc(m->meshes, sizeof(Triangle) * m->mesh_capacity);
     }
 
-    s->meshes[s->mesh_length++] = t;
+    m->meshes[m->mesh_length++] = t;
 }
 
-void Scene_popTriangle(Scene* s)
+void Model_popTriangle(Model* m)
 {
-    if (s->mesh_length > 0)
-        s->mesh_length--;
+    if (m->mesh_length > 0)
+        m->mesh_length--;
 }
 
-void Scene_removeTriangle(Scene* s, int i)
+void Model_removeTriangle(Model* m, int i)
 {
-    s->meshes[i] = s->meshes[s->mesh_length - 1];
-    s->mesh_length--;
+    m->meshes[i] = m->meshes[m->mesh_length - 1];
+    m->mesh_length--;
+}
+
+
+void Scene_addModel(Scene* s, Model m)
+{
+    if (s->model_length >= s->model_capacity)
+    {
+        s->model_capacity =
+            (s->model_capacity == 0) ? 4 : s->model_capacity * 2;
+
+        s->models = realloc(
+            s->models,
+            sizeof(Model) * s->model_capacity
+        );
+    }
+
+    s->models[s->model_length++] = m;
+}
+
+void Scene_popModel(Scene* s)
+{
+    if (s->model_length > 0)
+        s->model_length--;
+}
+
+void Scene_removeModel(Scene* s, int i)
+{
+    if (i < 0 || i >= s->model_length)
+        return;
+
+    s->models[i] = s->models[s->model_length - 1];
+    s->model_length--;
 }

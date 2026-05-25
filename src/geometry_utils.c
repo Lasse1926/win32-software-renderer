@@ -4,6 +4,7 @@
 #include "scene.h"
 #include "transform.h"
 #include "vector_utils.h"
+#include <math.h>
 
 AABB AABB_from_Triangle(Triangle a) {
   AABB aabb;
@@ -63,10 +64,10 @@ ScreenTriangle ScreenTriangle_Empty() {
   return st;
 }
 
-ScreenTriangle ScreenTriangle_Vec3(Vec3D a,Vec3D b,Vec3D c){
+ScreenTriangle ScreenTriangle_Vec3(Vec3D a, Vec3D b, Vec3D c) {
   ScreenTriangle st = {
-    .vertices = {a,b,c},
-    .color = 0x00FFFFFF,
+      .vertices = {a, b, c},
+      .color = 0x00FFFFFF,
   };
   return st;
 }
@@ -81,17 +82,17 @@ float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate) {
          start_to_end.x * start_to_candidate.y;
 }
 
-float singed_triangle_area(ScreenTriangle t){
+float signed_triangle_area(ScreenTriangle t) {
   Vec2D a = Vec2D_from_Vec3D_XY(t.vertices[0]);
   Vec2D b = Vec2D_from_Vec3D_XY(t.vertices[1]);
   Vec2D c = Vec2D_from_Vec3D_XY(t.vertices[2]);
-  Vec2D a_c = Vec2D_sub(c,a);
-  Vec2D abPerp = Vec2D_perpendicular(Vec2D_sub(b,a));
-  return Vec2D_dot(a_c,abPerp)/2.0f;
+  Vec2D a_c = Vec2D_sub(c, a);
+  Vec2D abPerp = Vec2D_perpendicular(Vec2D_sub(b, a));
+  return Vec2D_dot(a_c, abPerp) / 2.0f;
 }
 
-ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Scene *s){
-  mat4 Model = Transform_to_Model_mat4(s->transform);
+ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Model *m) {
+  mat4 Model = Transform_to_Model_mat4(m->transform);
   mat4 View = build_view_matrix(c);
   mat4 Proj = c->perspective_matrix;
 
@@ -100,13 +101,14 @@ ClipTriangle get_clip_from_trinagle(Camera *c, Triangle t, Scene *s){
   ClipTriangle clip;
 
   for (int i = 0; i < 3; i++) {
-    clip.vertices[i] = mul_mat4_vec4(MVP, Vec4D_from_Vec3D(t.vertices[i].position, 1));
+    clip.vertices[i] =
+        mul_mat4_vec4(MVP, Vec4D_from_Vec3D(t.vertices[i].position, 1));
   }
   clip.color = t.color;
   return clip;
 }
 
-ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip, Scene *s){
+ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip) {
   ScreenTriangle st;
 
   for (int i = 0; i < 3; i++) {
@@ -127,19 +129,26 @@ ScreenTriangle ScreenTriangle_from_clipTriangle(Camera *c, ClipTriangle clip, Sc
   return st;
 }
 
-Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t){
-  Vec3D a = t.vertices[0];
-  Vec3D b = t.vertices[0];
-  Vec3D c = t.vertices[0];
-  Vec3D point = Vec3D_XYZ(p.x,p.y,1.0f);
+Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t)
+{
+    Vec3D a = t.vertices[0];
+    Vec3D b = t.vertices[1];
+    Vec3D c = t.vertices[2];
 
-  float areaABP = singed_triangle_area(ScreenTriangle_Vec3(a,b,point));
-  float areaBCP = singed_triangle_area(ScreenTriangle_Vec3(b,c,point));
-  float areaCAP = singed_triangle_area(ScreenTriangle_Vec3(c,a,point));
+    float areaABP = signed_triangle_area(ScreenTriangle_Vec3(a, b, Vec3D_XYZ(p.x, p.y, 0)));
+    float areaBCP = signed_triangle_area(ScreenTriangle_Vec3(b, c, Vec3D_XYZ(p.x, p.y, 0)));
+    float areaCAP = signed_triangle_area(ScreenTriangle_Vec3(c, a, Vec3D_XYZ(p.x, p.y, 0)));
 
-  float invAreaSum = 1.0f/(areaABP+areaBCP+areaCAP);
+    float area = areaABP + areaBCP + areaCAP;
 
-  Vec3D weights = Vec3D_XYZ(areaBCP*invAreaSum,areaCAP*invAreaSum,areaABP*invAreaSum);
-  return weights;
+    if (fabsf(area) < 1e-8f)
+        return Vec3D_XYZ(0, 0, 0);
 
+    float invArea = 1.0f / area;
+
+    return Vec3D_XYZ(
+        areaBCP * invArea,
+        areaCAP * invArea,
+        areaABP * invArea
+    );
 }
