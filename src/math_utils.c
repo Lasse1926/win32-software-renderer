@@ -165,3 +165,30 @@ mat3 mat3_rotate_z(float r){
 
     return M;
 }
+mat3 mat3_rotate_axis(Vec3D axis, float r) {
+    axis = Vec3D_normalize(axis);
+
+    float x = axis.x;
+    float y = axis.y;
+    float z = axis.z;
+
+    float c = cosf(r);
+    float s = sinf(r);
+    float t = 1.0f - c;
+
+    mat3 M;
+
+    M.m[0][0] = t*x*x + c;
+    M.m[0][1] = t*x*y - s*z;
+    M.m[0][2] = t*x*z + s*y;
+
+    M.m[1][0] = t*x*y + s*z;
+    M.m[1][1] = t*y*y + c;
+    M.m[1][2] = t*y*z - s*x;
+
+    M.m[2][0] = t*x*z - s*y;
+    M.m[2][1] = t*y*z + s*x;
+    M.m[2][2] = t*z*z + c;
+
+    return M;
+}

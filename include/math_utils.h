@@ -25,6 +25,8 @@ mat3 mat3_rotate_x(float r);
 mat3 mat3_rotate_y(float r);
 mat3 mat3_rotate_z(float r);
 
+mat3 mat3_rotate_axis(Vec3D axis, float r);
+
 mat4 mat4_from_mat3(mat3 A);
 
 float Q_rsqrt( float number );

@@ -1,12 +1,12 @@
 #include "transform.h"
 #include "math_utils.h"
+#include "quaternion.h"
 #include "vector_utils.h"
 
 Transform Transform_ZERO() {
   return (Transform){
       .position = Vec3D_ZERO(),
-      .rotation = mat3_identity(),
-      .euler_angles = Vec3D_ZERO(),
+      .rotation = Quaternion_identity(),
   };
 }
 
@@ -53,41 +53,83 @@ mat4 position_to_translationMat(Vec3D position) {
   return M;
 }
 
-void update_rotation(Transform *t)
-{
-    mat3 Rx = rotate_mat3_x(mat3_identity(), t->euler_angles.x);
-    mat3 Ry = rotate_mat3_y(mat3_identity(), t->euler_angles.y);
-    mat3 Rz = rotate_mat3_z(mat3_identity(), t->euler_angles.z);
-
-    // order matters (this is standard yaw-pitch-roll)
-    t->rotation = mat3_multiply(Ry, mat3_multiply(Rx, Rz));
-}
-
 void rotate_Transform_x(Transform *t, float r) {
-  t->euler_angles.x += r;
-  update_rotation(t);
+  Quaternion dq = Quaternion_rotate_x(r);
+
+  t->rotation = Quaternion_mult(dq, t->rotation);
+  Quaternion_normalized(&t->rotation);
 }
+
 void rotate_Transform_y(Transform *t, float r) {
-  t->euler_angles.y += r;
-  update_rotation(t);
+  Quaternion dq = Quaternion_rotate_y(r);
+
+  t->rotation = Quaternion_mult(dq, t->rotation);
+  Quaternion_normalized(&t->rotation);
 }
+
 void rotate_Transform_z(Transform *t, float r) {
-  t->euler_angles.z += r;
-  update_rotation(t);
+  Quaternion dq = Quaternion_rotate_z(r);
+
+  t->rotation = Quaternion_mult(dq, t->rotation);
+  Quaternion_normalized(&t->rotation);
 }
 
 mat4 Transform_to_Model_mat4(Transform t) {
   mat4 M = mat4_identity();
 
-  // rotation (3x3 → 4x4)
+  mat4 R = mat4_from_mat3(mat3_from_Quaternion(t.rotation));
+
   for (int i = 0; i < 3; i++)
     for (int j = 0; j < 3; j++)
-      M.m[i][j] = t.rotation.m[i][j];
+      M.m[i][j] = R.m[i][j];
 
-  // translation
   M.m[0][3] = t.position.x;
   M.m[1][3] = t.position.y;
   M.m[2][3] = t.position.z;
 
   return M;
+}
+
+static void rotate_around_point(Transform *t, Vec3D point, Quaternion dq) {
+  Vec3D offset = Vec3D_sub(t->position, point);
+
+  mat3 R = mat3_from_Quaternion(dq);
+  Vec3D rotated = mul_mat3_vec3(R, offset);
+
+  t->position = Vec3D_add(point, rotated);
+
+  t->rotation = Quaternion_mult(dq, t->rotation);
+  Quaternion_normalized(&t->rotation);
+}
+
+void rotate_Transform_around_point_x(Transform *t, Vec3D point, float r) {
+  Quaternion dq = Quaternion_rotate_x(r);
+  rotate_around_point(t, point, dq);
+}
+
+void rotate_Transform_around_point_y(Transform *t, Vec3D point, float r) {
+  Quaternion dq = Quaternion_rotate_y(r);
+  rotate_around_point(t, point, dq);
+}
+
+void rotate_Transform_around_point_z(Transform *t, Vec3D point, float r) {
+  Quaternion dq = Quaternion_rotate_z(r);
+  rotate_around_point(t, point, dq);
+}
+
+void rotate_Transform_around_point_axis(Transform *t, Vec3D point, float r, Vec3D axis) {
+  Vec3D axis_n = Vec3D_normalize(axis);
+
+  Quaternion dq = Quaternion_rotate_axis(axis_n, r);
+  rotate_around_point(t, point, dq);
+}
+
+Vec3D get_Transform_basis_x(Transform* t){
+  return get_Quaternion_basis_x(t->rotation);
+}
+Vec3D get_Transform_basis_y(Transform* t){
+  return get_Quaternion_basis_y(t->rotation);
+}
+Vec3D get_Transform_basis_z(Transform* t){
+  return get_Quaternion_basis_y(t->rotation);
 }

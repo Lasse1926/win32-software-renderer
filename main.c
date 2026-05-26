@@ -5,7 +5,9 @@
 #include "include/transform.h"
 #include "include/vector_utils.h"
 #include <stdio.h>
-#define FPS 100
+static const int FPS = 0;
+#define RENDER_WIDTH 320
+#define RENDER_HEIGHT 240
 typedef struct AppState {
   struct Framebuffer fb;
   float *depth_buffer;
@@ -24,7 +26,7 @@ void Render(HWND hwnd) {
   uint32_t *pixels = (uint32_t *)fb->pixels;
   float *db = state->depth_buffer;
 
-  Camera_render(cam, &state->s, pixels, fb->width, fb->height,db);
+  Camera_render(cam, &state->s, pixels, fb->width, fb->height, db);
 }
 
 LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
@@ -33,20 +35,29 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
   case WM_KEYDOWN: {
     Camera *cam = &state->cam;
     Scene *s = &state->s;
-    Model *mTarget = &s->models[1];
     switch (wParam) {
-    case 'W':
-      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(0.0f,0.0f,1.0f));
+    case 'W': {
+      Vec3D axis = get_Transform_basis_x(&cam->transform);
+      rotate_Transform_around_point_axis(
+          &cam->transform, Vec3D_XYZ(0.0f, 0.0f, -20.0f), 0.3f, axis);
       break;
-    case 'S':
-      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(0.0f,0.0f,-1.0f));
+    }
+    case 'S': {
+      Vec3D axis = get_Transform_basis_x(&cam->transform);
+      rotate_Transform_around_point_axis(
+          &cam->transform, Vec3D_XYZ(0.0f, 0.0f, -20.0f), -0.3f, axis);
       break;
-    case 'A':
-      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(1.0f,0.0f,0.0f));
+    }
+    case 'A': {
+      rotate_Transform_around_point_y(&cam->transform,
+                                      Vec3D_XYZ(0.0f, 0.0f, -20.0f), 0.3f);
       break;
-    case 'D':
-      mTarget->transform.position = Vec3D_add(mTarget->transform.position,Vec3D_XYZ(-1.0f,0.0f,0.0f));
+    }
+    case 'D': {
+      rotate_Transform_around_point_y(&cam->transform,
+                                      Vec3D_XYZ(0.0f, 0.0f, -20.0f), -0.3f);
       break;
+    }
     }
     return 0;
   }
@@ -64,17 +75,17 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     Camera *cam_param = (Camera *)cs->lpCreateParams;
     state->cam = *cam_param;
 
-    state->fb.width = 500;
-    state->fb.height = 500;
+    state->fb.width = RENDER_WIDTH;
+    state->fb.height = RENDER_HEIGHT;
     state->fb.pixels = NULL;
     state->fb.memDC = NULL;
     state->fb.bitmap = NULL;
     // color format 0xAARRGGBB
-    uint32_t red     = 0x00FF2020;
-    uint32_t green   = 0x0020FF20;
-    uint32_t blue    = 0x002020FF;
-    uint32_t yellow  = 0x0020FFFF;
-    uint32_t cyan    = 0x00FFFF20;
+    uint32_t red = 0x00FF2020;
+    uint32_t green = 0x0020FF20;
+    uint32_t blue = 0x002020FF;
+    uint32_t yellow = 0x0020FFFF;
+    uint32_t cyan = 0x00FFFF20;
     uint32_t magenta = 0x00FF20FF;
 
     // Front face
@@ -160,7 +171,7 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     Model m2 = {0};
 
     m.transform = Transform_ZERO();
-    m.transform.position.z = -30.0f;
+    m.transform.position.z = -40.0f;
     rotate_Transform_y(&m.transform, 1.570796);
     m.mesh_capacity = 8;
     m.meshes = malloc(sizeof(Triangle) * m.mesh_capacity);
@@ -196,8 +207,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     Model_addTriangle(&m2, t10);
     Model_addTriangle(&m2, t11);
 
-    Scene_addModel(&s,m);
-    Scene_addModel(&s,m2);
+    Scene_addModel(&s, m);
+    Scene_addModel(&s, m2);
 
     state->s = s;
 
@@ -218,7 +229,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     state->fb.bitmap =
         CreateDIBSection(hdc, &bmi, DIB_RGB_COLORS, &state->fb.pixels, NULL, 0);
 
-    state->depth_buffer = malloc(state->fb.width * state->fb.height * sizeof(float));
+    state->depth_buffer =
+        malloc(state->fb.width * state->fb.height * sizeof(float));
 
     SelectObject(state->fb.memDC, state->fb.bitmap);
 
@@ -235,14 +247,88 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     PAINTSTRUCT ps;
     HDC hdc = BeginPaint(hwnd, &ps);
 
+    RECT rc;
+    GetClientRect(hwnd, &rc);
+
+    int winW = rc.right - rc.left;
+    int winH = rc.bottom - rc.top;
+
+    HDC memDC = CreateCompatibleDC(hdc);
+    HBITMAP memBitmap = CreateCompatibleBitmap(hdc, winW, winH);
+    HGDIOBJ oldBmp = SelectObject(memDC, memBitmap);
+
+    // fill background in memory buffer
+    HBRUSH bg = (HBRUSH)GetStockObject(GRAY_BRUSH);
+    FillRect(memDC, &rc, bg);
+
     if (state) {
-      BitBlt(hdc, 0, 0, state->fb.width, state->fb.height, state->fb.memDC, 0,
-             0, SRCCOPY);
+      float scaleX = (float)winW / state->fb.width;
+      float scaleY = (float)winH / state->fb.height;
+      float scale = (scaleX < scaleY) ? scaleX : scaleY;
+
+      int dstW = (int)(state->fb.width * scale);
+      int dstH = (int)(state->fb.height * scale);
+
+      int offsetX = (winW - dstW) / 2;
+      int offsetY = (winH - dstH) / 2;
+
+      SetStretchBltMode(memDC, COLORONCOLOR);
+
+      StretchBlt(memDC, offsetX, offsetY, dstW, dstH, state->fb.memDC, 0, 0,
+                 state->fb.width, state->fb.height, SRCCOPY);
     }
+
+    BitBlt(hdc, 0, 0, winW, winH, memDC, 0, 0, SRCCOPY);
+
+    SelectObject(memDC, oldBmp);
+    DeleteObject(memBitmap);
+    DeleteDC(memDC);
 
     EndPaint(hwnd, &ps);
     return 0;
   }
+  case WM_SIZING: {
+    RECT *rect = (RECT *)lParam;
+
+    int width = rect->right - rect->left;
+    int height = rect->bottom - rect->top;
+
+    const float targetAspect = 320.0f / 240.0f;
+
+    switch (wParam) {
+    case WMSZ_RIGHT:
+    case WMSZ_LEFT: {
+      height = (int)(width / targetAspect);
+      rect->bottom = rect->top + height;
+    } break;
+
+    case WMSZ_TOP:
+    case WMSZ_BOTTOM: {
+      width = (int)(height * targetAspect);
+      rect->right = rect->left + width;
+    } break;
+
+    case WMSZ_TOPLEFT:
+    case WMSZ_TOPRIGHT:
+    case WMSZ_BOTTOMLEFT:
+    case WMSZ_BOTTOMRIGHT: {
+      float currentAspect = (float)width / (float)height;
+
+      if (currentAspect > targetAspect) {
+        width = (int)(height * targetAspect);
+      } else {
+        height = (int)(width / targetAspect);
+      }
+
+      rect->right = rect->left + width;
+      rect->bottom = rect->top + height;
+    } break;
+    }
+
+    return TRUE;
+  }
+  case WM_ERASEBKGND:
+    return 1;
 
   case WM_DESTROY: {
     AppState *state = (AppState *)GetWindowLongPtr(hwnd, GWLP_USERDATA);
@@ -258,13 +344,12 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
         state->fb.memDC = NULL;
       }
 
-      for(int i = 0; i<state->s.model_length;i++){
+      for (int i = 0; i < state->s.model_length; i++) {
         free(state->s.models[i].meshes);
         state->s.models[i].meshes = NULL;
         state->s.models[i].mesh_capacity = 0;
         state->s.models[i].mesh_length = 0;
       }
-
 
       free(state->s.models);
       state->s.models = NULL;
@@ -297,13 +382,14 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
   RegisterClassA(&wc);
 
-  RECT r = {0, 0, 500, 500};
+  RECT r = {0, 0, RENDER_WIDTH, RENDER_HEIGHT};
 
   AdjustWindowRectEx(&r, WS_OVERLAPPEDWINDOW, FALSE, WS_EX_OVERLAPPEDWINDOW);
   int width = r.right - r.left;
   int height = r.bottom - r.top;
 
-  Camera c = Camera_new(width, height, 1.047198f, 1.0f, 0.1f, 1000.0f);
+  Camera c = Camera_new(RENDER_WIDTH, RENDER_HEIGHT, 1.047198f,
+                        (float)RENDER_WIDTH / RENDER_HEIGHT, 0.1f, 1000.0f);
 
   HWND hwnd = CreateWindowExA(WS_EX_OVERLAPPEDWINDOW, "WindowTest_MainWindow",
                               "Test Window", WS_OVERLAPPEDWINDOW | WS_VISIBLE,
@@ -332,6 +418,7 @@ int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance,
 
     double dt =
         (double)(currentTime.QuadPart - lastTime.QuadPart) / freq.QuadPart;
+    // printf("%f\n", dt);
     lastTime = currentTime;
     // --- dt end ---
 
