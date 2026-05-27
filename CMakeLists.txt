@@ -14,6 +14,8 @@ target_sources(win32-software-renderer
     src/geometry_utils.c
     src/math_utils.c
     src/quaternion.c
+    src/model_loader.c
+    src/file_utils.c
 )
 
 target_include_directories(win32-software-renderer

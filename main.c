@@ -4,6 +4,7 @@
 #include "include/scene.h"
 #include "include/transform.h"
 #include "include/vector_utils.h"
+#include "model_loader.h"
 #include <stdio.h>
 static const int FPS = 0;
 #define RENDER_WIDTH 320
@@ -80,91 +81,6 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     state->fb.pixels = NULL;
     state->fb.memDC = NULL;
     state->fb.bitmap = NULL;
-    // color format 0xAARRGGBB
-    uint32_t red = 0x00FF2020;
-    uint32_t green = 0x0020FF20;
-    uint32_t blue = 0x002020FF;
-    uint32_t yellow = 0x0020FFFF;
-    uint32_t cyan = 0x00FFFF20;
-    uint32_t magenta = 0x00FF20FF;
-
-    // Front face
-    Triangle t0;
-    t0.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, -5.0f)};
-    t0.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, -5.0f)};
-    t0.vertices[0] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, -5.0f)};
-    t0.color = red;
-
-    Triangle t1;
-    t1.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, -5.0f)};
-    t1.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, -5.0f)};
-    t1.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, -5.0f)};
-    t1.color = red;
-
-    // Back face
-    Triangle t2;
-    t2.vertices[2] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 5.0f)};
-    t2.vertices[1] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 5.0f)};
-    t2.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, 5.0f)};
-    t2.color = green;
-
-    Triangle t3;
-    t3.vertices[2] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 5.0f)};
-    t3.vertices[1] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, 5.0f)};
-    t3.vertices[0] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, 5.0f)};
-    t3.color = green;
-
-    // Left face
-    Triangle t4;
-    t4.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 5.0f)};
-    t4.vertices[1] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, -5.0f)};
-    t4.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, -5.0f)};
-    t4.color = blue;
-
-    Triangle t5;
-    t5.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 5.0f)};
-    t5.vertices[1] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, -5.0f)};
-    t5.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, 5.0f)};
-    t5.color = blue;
-
-    // Right face
-    Triangle t6;
-    t6.vertices[2] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, -5.0f)};
-    t6.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 5.0f)};
-    t6.vertices[0] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, 5.0f)};
-    t6.color = yellow;
-
-    Triangle t7;
-    t7.vertices[2] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, -5.0f)};
-    t7.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, 5.0f)};
-    t7.vertices[0] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, -5.0f)};
-    t7.color = yellow;
-
-    // Top face
-    Triangle t8;
-    t8.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, -5.0f)};
-    t8.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, -5.0f)};
-    t8.vertices[0] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, 5.0f)};
-    t8.color = cyan;
-
-    Triangle t9;
-    t9.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, -5.0f)};
-    t9.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, 5.0f, 5.0f)};
-    t9.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, 5.0f, 5.0f)};
-    t9.color = cyan;
-
-    // Bottom face
-    Triangle t10;
-    t10.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 5.0f)};
-    t10.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, 5.0f)};
-    t10.vertices[0] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, -5.0f)};
-    t10.color = magenta;
-
-    Triangle t11;
-    t11.vertices[2] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, 5.0f)};
-    t11.vertices[1] = (Vertex){.position = Vec3D_XYZ(5.0f, -5.0f, -5.0f)};
-    t11.vertices[0] = (Vertex){.position = Vec3D_XYZ(-5.0f, -5.0f, -5.0f)};
-    t11.color = magenta;
 
     Scene s = {0};
     Model m = {0};
@@ -181,31 +97,8 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     m2.mesh_capacity = 8;
     m2.meshes = malloc(sizeof(Triangle) * m2.mesh_capacity);
 
-    Model_addTriangle(&m, t0);
-    Model_addTriangle(&m, t1);
-    Model_addTriangle(&m, t2);
-    Model_addTriangle(&m, t3);
-    Model_addTriangle(&m, t4);
-    Model_addTriangle(&m, t5);
-    Model_addTriangle(&m, t6);
-    Model_addTriangle(&m, t7);
-    Model_addTriangle(&m, t8);
-    Model_addTriangle(&m, t9);
-    Model_addTriangle(&m, t10);
-    Model_addTriangle(&m, t11);
-
-    Model_addTriangle(&m2, t0);
-    Model_addTriangle(&m2, t1);
-    Model_addTriangle(&m2, t2);
-    Model_addTriangle(&m2, t3);
-    Model_addTriangle(&m2, t4);
-    Model_addTriangle(&m2, t5);
-    Model_addTriangle(&m2, t6);
-    Model_addTriangle(&m2, t7);
-    Model_addTriangle(&m2, t8);
-    Model_addTriangle(&m2, t9);
-    Model_addTriangle(&m2, t10);
-    Model_addTriangle(&m2, t11);
+    load_Model_from_Obj(&m,"Primitives_raster/primitive_cube.obj");
+    load_Model_from_Obj(&m2,"Primitives_raster/primitive_cube.obj");
 
     Scene_addModel(&s, m);
     Scene_addModel(&s, m2);
