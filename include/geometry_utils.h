@@ -44,3 +44,4 @@ ScreenTriangle ScreenTriangle_Vec3(Vec3D a,Vec3D b,Vec3D c);
 float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate);
 float signed_triangle_area(ScreenTriangle t);
 Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t);
+void scale_Triangle(Triangle *t,Vec3D origin, Vec3D scale);

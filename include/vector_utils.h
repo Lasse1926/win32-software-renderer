@@ -28,6 +28,7 @@ float Vec3D_len_sq(Vec3D a);
 Vec3D Vec3D_normalize(Vec3D a);
 Vec3D Vec3_cross(Vec3D a, Vec3D b);
 float Vec3D_dot(Vec3D a, Vec3D b);
+Vec3D Vec3D_mult(Vec3D a,Vec3D b);
 
 Vec2D Vec2D_from_Vec3D_XY(Vec3D v);
 Vec2D Vec2D_XY(float x, float y);

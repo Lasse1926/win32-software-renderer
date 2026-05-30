@@ -6,6 +6,7 @@
 typedef struct Transform {
   Vec3D position;
   Quaternion rotation;
+  Vec3D scale;
 }Transform;
 
 Transform Transform_ZERO();

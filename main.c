@@ -87,12 +87,14 @@ LRESULT CALLBACK WndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
     Model m2 = {0};
 
     m.transform = Transform_ZERO();
+    m.transform.scale = Vec3D_XYZ(10.0f,10.0f,10.0f);
     m.transform.position.z = -40.0f;
     rotate_Transform_y(&m.transform, 1.570796);
     m.mesh_capacity = 8;
     m.meshes = malloc(sizeof(Triangle) * m.mesh_capacity);
 
     m2.transform = Transform_ZERO();
+    m2.transform.scale = Vec3D_XYZ(5.0f,5.0f,5.0f);
     m2.transform.position.z = -20.0f;
     m2.mesh_capacity = 8;
     m2.meshes = malloc(sizeof(Triangle) * m2.mesh_capacity);

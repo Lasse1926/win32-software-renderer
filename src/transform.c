@@ -7,6 +7,7 @@ Transform Transform_ZERO() {
   return (Transform){
       .position = Vec3D_ZERO(),
       .rotation = Quaternion_identity(),
+      .scale = Vec3D_XYZ(1.0f,1.0f,1.0f),
   };
 }
 
@@ -74,20 +75,38 @@ void rotate_Transform_z(Transform *t, float r) {
   Quaternion_normalized(&t->rotation);
 }
 
-mat4 Transform_to_Model_mat4(Transform t) {
-  mat4 M = mat4_identity();
+mat4 Transform_to_Model_mat4(Transform t)
+{
+    mat4 M = mat4_identity();
 
-  mat4 R = mat4_from_mat3(mat3_from_Quaternion(t.rotation));
+    mat3 R = mat3_from_Quaternion(t.rotation);
 
-  for (int i = 0; i < 3; i++)
-    for (int j = 0; j < 3; j++)
-      M.m[i][j] = R.m[i][j];
+    // apply scale into rotation matrix space
+    for (int i = 0; i < 3; i++) {
+        for (int j = 0; j < 3; j++) {
+            M.m[i][j] = R.m[i][j];
+        }
+    }
 
-  M.m[0][3] = t.position.x;
-  M.m[1][3] = t.position.y;
-  M.m[2][3] = t.position.z;
+    // apply scale per axis (IMPORTANT)
+    M.m[0][0] *= t.scale.x;
+    M.m[1][0] *= t.scale.x;
+    M.m[2][0] *= t.scale.x;
 
-  return M;
+    M.m[0][1] *= t.scale.y;
+    M.m[1][1] *= t.scale.y;
+    M.m[2][1] *= t.scale.y;
+
+    M.m[0][2] *= t.scale.z;
+    M.m[1][2] *= t.scale.z;
+    M.m[2][2] *= t.scale.z;
+
+    // translation
+    M.m[0][3] = t.position.x;
+    M.m[1][3] = t.position.y;
+    M.m[2][3] = t.position.z;
+
+    return M;
 }
 
 static void rotate_around_point(Transform *t, Vec3D point, Quaternion dq) {

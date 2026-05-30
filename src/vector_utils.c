@@ -79,6 +79,10 @@ float Vec3D_dot(Vec3D a, Vec3D b){
            a.z * b.z;
 }
 
+Vec3D Vec3D_mult(Vec3D a,Vec3D b){
+  return Vec3D_XYZ(a.x*b.x, a.y*b.y, a.z*b.z);
+}
+
 // Vec2D ----------------------
 
 

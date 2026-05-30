@@ -5,6 +5,7 @@
 #include "transform.h"
 #include "vector_utils.h"
 #include <math.h>
+#include <stdio.h>
 
 AABB AABB_from_Triangle(Triangle a) {
   AABB aabb;
@@ -151,4 +152,16 @@ Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t)
         areaCAP * invArea,
         areaABP * invArea
     );
+}
+
+void scale_Triangle(Triangle *t, Vec3D origin, Vec3D scale)
+{
+    for(int i = 0; i < 3; i++)
+    {
+        Vec3D offset = Vec3D_sub(t->vertices[i].position, origin);
+
+        offset = Vec3D_mult(offset, scale);
+
+        t->vertices[i].position = Vec3D_add(origin, offset);
+    }
 }

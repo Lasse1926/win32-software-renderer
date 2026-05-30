@@ -58,6 +58,7 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width, int height,
 
       Triangle t = m->meshes[i];
 
+
       ClipTriangle ct = get_clip_from_trinagle(c, t, m);
 
       int behind = 0;
