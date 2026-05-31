@@ -1,4 +1,5 @@
 #pragma once
+#include "geometry_utils.h"
 #include "math_utils.h"
 #include "scene.h"
 #include "transform.h"
@@ -16,7 +17,12 @@ typedef struct Camera {
   mat4 perspective_matrix;
 }Camera;
 
+typedef struct Frustum {
+  Plane planes[6];
+} Frustum;
+
 Camera Camera_new(int screen_width,int screen_height,float fovY,float aspect,float near,float far);
 void Camera_render(Camera* c,Scene* s, uint32_t* pixels, int width, int height,float *db);
 mat4 build_view_matrix(Camera* c);
 mat4 camera_projection_matrix(Camera* c);
+Frustum camera_frustum(Camera* c);

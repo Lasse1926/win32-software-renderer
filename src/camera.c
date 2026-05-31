@@ -7,9 +7,17 @@
 #include "vector_utils.h"
 #include <float.h>
 #include <math.h>
+#include <stddef.h>
 #include <stdint.h>
 #include <stdio.h>
 #include <string.h>
+
+#define FRUSTUM_NEAR 0
+#define FRUSTUM_FAR 1
+#define FRUSTUM_LEFT 2
+#define FRUSTUM_RIGHT 3
+#define FRUSTUM_TOP 4
+#define FRUSTUM_BOTTOM 4
 
 static int clamp_int(int v, int lo, int hi) {
   if (v < lo)
@@ -58,7 +66,6 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width, int height,
 
       Triangle t = m->meshes[i];
 
-
       ClipTriangle ct = get_clip_from_trinagle(c, t, m);
 
       int behind = 0;
@@ -66,7 +73,8 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width, int height,
         if (ct.vertices[v].w <= 0.0f)
           behind++;
       }
-      if (behind >= 1) continue;
+      if (behind >= 1)
+        continue;
 
       ScreenTriangle st = ScreenTriangle_from_clipTriangle(c, ct);
 
@@ -89,21 +97,21 @@ void Camera_render(Camera *c, Scene *s, uint32_t *pixels, int width, int height,
       float invArea = 1.0f / (area);
 
       // edge coefficients (step amounts when moving right/down)
-      float A0 = (v2.y - v1.y) ;
-      float B0 = (v1.x - v2.x) ;
+      float A0 = (v2.y - v1.y);
+      float B0 = (v1.x - v2.x);
 
-      float A1 = (v0.y - v2.y) ;
-      float B1 = (v2.x - v0.x) ;
+      float A1 = (v0.y - v2.y);
+      float B1 = (v2.x - v0.x);
 
-      float A2 = (v1.y - v0.y) ;
-      float B2 = (v0.x - v1.x) ;
+      float A2 = (v1.y - v0.y);
+      float B2 = (v0.x - v1.x);
 
       // robust initialization using SAME edge function
       Vec2D p0 = Vec2D_XY(x0, y0);
 
-      float w0_row = line_determinant(v1, v2, p0) ;
-      float w1_row = line_determinant(v2, v0, p0) ;
-      float w2_row = line_determinant(v0, v1, p0) ;
+      float w0_row = line_determinant(v1, v2, p0);
+      float w1_row = line_determinant(v2, v0, p0);
+      float w2_row = line_determinant(v0, v1, p0);
 
       for (int y = y0; y <= y1; y++) {
 
@@ -165,4 +173,23 @@ mat4 camera_projection_matrix(Camera *c) {
   P.m[3][3] = 0.0f;
 
   return P;
+}
+
+Frustum camera_frustum(Camera *c) {
+  Frustum f = {0};
+
+  mat4 proj_mat = camera_projection_matrix(c);
+
+  Vec4D row1 = Vec4D_WXYZ(proj_mat.m[0][0],proj_mat.m[1][0],proj_mat.m[2][0],proj_mat.m[3][0]);
+  Vec4D row2 = Vec4D_WXYZ(proj_mat.m[0][1],proj_mat.m[1][1],proj_mat.m[2][1],proj_mat.m[3][1]);
+  Vec4D row3 = Vec4D_WXYZ(proj_mat.m[0][2],proj_mat.m[1][2],proj_mat.m[2][2],proj_mat.m[3][2]);
+  Vec4D row4 = Vec4D_WXYZ(proj_mat.m[0][3],proj_mat.m[1][3],proj_mat.m[2][3],proj_mat.m[3][3]);
+
+  f.planes[FRUSTUM_LEFT]    =plane_from_Vec4(Vec4D_add(row4 , row1));
+  f.planes[FRUSTUM_RIGHT]   =plane_from_Vec4(Vec4D_sub(row4 , row1));
+  f.planes[FRUSTUM_BOTTOM]  =plane_from_Vec4(Vec4D_add(row4 , row2));
+  f.planes[FRUSTUM_TOP]     =plane_from_Vec4(Vec4D_sub(row4 , row2));
+  f.planes[FRUSTUM_NEAR]    =plane_from_Vec4(Vec4D_add(row4 , row3));
+  f.planes[FRUSTUM_FAR]     =plane_from_Vec4(Vec4D_sub(row4 , row3));
+  return f;
 }

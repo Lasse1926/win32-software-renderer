@@ -15,6 +15,9 @@ typedef struct Vec3D {
 
 Vec4D Vec4D_from_Vec3D(Vec3D v,float z);
 Vec4D Vec4D_multiply(Vec4D a,Vec4D b);
+Vec4D Vec4D_WXYZ(float w, float x, float y, float z);
+Vec4D Vec4D_add(Vec4D a, Vec4D b);
+Vec4D Vec4D_sub(Vec4D a, Vec4D b);
 
 Vec3D Vec3D_XYZ(float x, float y,float z);
 Vec3D Vec3D_ZERO();
@@ -26,7 +29,7 @@ Vec3D Vec3D_scale(Vec3D a,float scalar);
 float Vec3D_len(Vec3D a);
 float Vec3D_len_sq(Vec3D a);
 Vec3D Vec3D_normalize(Vec3D a);
-Vec3D Vec3_cross(Vec3D a, Vec3D b);
+Vec3D Vec3D_cross(Vec3D a, Vec3D b);
 float Vec3D_dot(Vec3D a, Vec3D b);
 Vec3D Vec3D_mult(Vec3D a,Vec3D b);
 

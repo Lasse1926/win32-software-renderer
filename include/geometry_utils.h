@@ -32,6 +32,11 @@ typedef struct AABB {
   float y_min;
 } AABB;
 
+typedef struct Plane {
+    Vec3D normal;
+    float d;
+} Plane;
+
 AABB AABB_from_Triangle(Triangle a);
 AABB AABB_from_ScreenTriangle(ScreenTriangle a);
 Vec2D flaten_Vertex_Z(Vertex v);
@@ -45,3 +50,5 @@ float line_determinant(Vec2D edge_start, Vec2D edge_end, Vec2D candidate);
 float signed_triangle_area(ScreenTriangle t);
 Vec3D get_screenTriangle_weights(Vec2D p, ScreenTriangle t);
 void scale_Triangle(Triangle *t,Vec3D origin, Vec3D scale);
+Plane plane_from_point_normal(Vec3D point, Vec3D normal);
+Plane plane_from_Vec4(Vec4D v);

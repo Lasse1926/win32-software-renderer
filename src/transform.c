@@ -16,8 +16,8 @@ mat4 rotation_from_forward(Vec3D forward) {
 
   forward = Vec3D_normalize(forward);
 
-  Vec3D right = Vec3D_normalize(Vec3_cross(worldUp, forward));
-  Vec3D up = Vec3_cross(forward, right);
+  Vec3D right = Vec3D_normalize(Vec3D_cross(worldUp, forward));
+  Vec3D up = Vec3D_cross(forward, right);
 
   mat4 m = {0};
 

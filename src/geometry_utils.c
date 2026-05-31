@@ -165,3 +165,17 @@ void scale_Triangle(Triangle *t, Vec3D origin, Vec3D scale)
         t->vertices[i].position = Vec3D_add(origin, offset);
     }
 }
+Plane plane_from_point_normal(Vec3D point, Vec3D normal)
+{
+    Plane p;
+    p.normal = Vec3D_normalize(normal);
+    p.d = -Vec3D_dot(p.normal, point);
+    return p;
+}
+
+Plane plane_from_Vec4(Vec4D v){
+  Plane p;
+  p.normal = Vec3D_XYZ(v.w,v.x,v.y);
+  p.d = v.z;
+  return p;
+}
